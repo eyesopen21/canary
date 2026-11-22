@@ -90,11 +90,13 @@ function envFileValues(root: string, file: string): Record<string, string> {
   return values;
 }
 
-/** Resolve the host source in the priority order defined by policy.md. */
-export function findHostSource(
+/** Reads one env file. Injectable so callers can observe file I/O in tests. */
+export type EnvFileReader = (root: string, file: string) => Record<string, string>;
+
+/** Steps 1–3: host sources resolved entirely in memory, with no file access. */
+function findProcessHostSource(
   tokens: string[],
   env: Record<string, string | undefined>,
-  root: string | undefined,
 ): HostSource | null {
   // 1. Explicit -h / --host argument.
   for (let i = 0; i < tokens.length; i++) {
@@ -122,17 +124,39 @@ export function findHostSource(
     if (value !== undefined) return { variable: name, value };
   }
 
-  // 4. .env then .env.local in the project root.
-  if (root !== undefined) {
-    for (const file of [".env", ".env.local"]) {
-      const values = envFileValues(root, file);
-      for (const name of HOST_VARIABLES) {
-        if (values[name] !== undefined) return { variable: name, value: values[name]! };
-      }
+  return null;
+}
+
+/**
+ * Step 4: .env then .env.local in the project root. This is the only place
+ * either file is read; it is deliberately separate from the in-memory steps
+ * so a caller that never resolves a host never touches the filesystem.
+ */
+export function findEnvFileHostSource(
+  root: string | undefined,
+  readEnvFile: EnvFileReader = envFileValues,
+): HostSource | null {
+  if (root === undefined) return null;
+  for (const file of [".env", ".env.local"]) {
+    const values = readEnvFile(root, file);
+    for (const name of HOST_VARIABLES) {
+      if (values[name] !== undefined) return { variable: name, value: values[name]! };
     }
   }
-
   return null;
+}
+
+/** Resolve the host source in the priority order defined by policy.md. */
+export function findHostSource(
+  tokens: string[],
+  env: Record<string, string | undefined>,
+  root: string | undefined,
+  readEnvFile: EnvFileReader = envFileValues,
+): HostSource | null {
+  // Cheap in-memory sources first; env files are read only if none matched.
+  const source = findProcessHostSource(tokens, env);
+  if (source !== null) return source;
+  return findEnvFileHostSource(root, readEnvFile);
 }
 
 /** Service names declared in a Compose file in the project root. */

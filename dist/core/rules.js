@@ -222,6 +222,9 @@ function classifyDatabase(
   context                       ,
 )                   {
   const effect = databaseEffect(tokens);
+  // D2: a destructive database effect is a prerequisite for B2. Returning
+  // here keeps env-file resolution (the only filesystem read in this path)
+  // off every allow, warn, B1, B3, and B4 segment.
   if (effect === null) return null;
 
   const source = findHostSource(tokens, context.env, context.root);

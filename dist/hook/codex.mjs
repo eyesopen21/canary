@@ -963,6 +963,9 @@ const __factories = {
       context                       ,
     )                   {
       const effect = databaseEffect(tokens);
+      // D2: a destructive database effect is a prerequisite for B2. Returning
+      // here keeps env-file resolution (the only filesystem read in this path)
+      // off every allow, warn, B1, B3, and B4 segment.
       if (effect === null) return null;
     
       const source = findHostSource(tokens, context.env, context.root);
@@ -1197,11 +1200,13 @@ const __factories = {
       return values;
     }
     
-    /** Resolve the host source in the priority order defined by policy.md. */
-    function findHostSource(
+    /** Reads one env file. Injectable so callers can observe file I/O in tests. */
+                                                                                       
+    
+    /** Steps 1–3: host sources resolved entirely in memory, with no file access. */
+    function findProcessHostSource(
       tokens          ,
       env                                    ,
-      root                    ,
     )                    {
       // 1. Explicit -h / --host argument.
       for (let i = 0; i < tokens.length; i++) {
@@ -1229,17 +1234,39 @@ const __factories = {
         if (value !== undefined) return { variable: name, value };
       }
     
-      // 4. .env then .env.local in the project root.
-      if (root !== undefined) {
-        for (const file of [".env", ".env.local"]) {
-          const values = envFileValues(root, file);
-          for (const name of HOST_VARIABLES) {
-            if (values[name] !== undefined) return { variable: name, value: values[name]  };
-          }
+      return null;
+    }
+    
+    /**
+     * Step 4: .env then .env.local in the project root. This is the only place
+     * either file is read; it is deliberately separate from the in-memory steps
+     * so a caller that never resolves a host never touches the filesystem.
+     */
+    function findEnvFileHostSource(
+      root                    ,
+      readEnvFile                = envFileValues,
+    )                    {
+      if (root === undefined) return null;
+      for (const file of [".env", ".env.local"]) {
+        const values = readEnvFile(root, file);
+        for (const name of HOST_VARIABLES) {
+          if (values[name] !== undefined) return { variable: name, value: values[name]  };
         }
       }
-    
       return null;
+    }
+    
+    /** Resolve the host source in the priority order defined by policy.md. */
+    function findHostSource(
+      tokens          ,
+      env                                    ,
+      root                    ,
+      readEnvFile                = envFileValues,
+    )                    {
+      // Cheap in-memory sources first; env files are read only if none matched.
+      const source = findProcessHostSource(tokens, env);
+      if (source !== null) return source;
+      return findEnvFileHostSource(root, readEnvFile);
     }
     
     /** Service names declared in a Compose file in the project root. */
@@ -1291,7 +1318,7 @@ const __factories = {
       return root !== undefined && composeServices(root).has(value);
     }
     
-    Object.assign(__exports, { parseHost, findHostSource, composeServices, isLocalHost });
+    Object.assign(__exports, { parseHost, findEnvFileHostSource, findHostSource, composeServices, isLocalHost });
   },
   "core/split.js": (__exports, __require) => {
     /**
