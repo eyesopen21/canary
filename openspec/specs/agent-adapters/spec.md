@@ -7,7 +7,7 @@ Defines how each of the five agent hooks receives a shell command, calls the sha
 ## Requirements
 
 ### Requirement: Package hook manifest locations
-The package SHALL register Claude Code through `hooks/claude-code.json` referenced by `.claude-plugin/plugin.json`, Codex through `hooks/codex.json` referenced by `.codex-plugin/plugin.json`, and Gemini CLI through `hooks/hooks.json` referenced by `gemini-extension.json`.
+The package SHALL register Claude Code through `hooks/claude-code.json` referenced by `.claude-plugin/plugin.json`, Codex through `hooks/codex.json` referenced by `.codex-plugin/plugin.json`, and Gemini CLI through `hooks/hooks.json` loaded by the conventional extension layout, not referenced from `gemini-extension.json` [S12].
 
 #### Scenario: Package points to per-agent hook manifests
 - **WHEN** the package manifests are loaded

@@ -155,7 +155,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## Cursor
 
-**Configuration.** `canary init --agent cursor` writes `.cursor/hooks.json` in the project root [S9]. Project hooks run from the project root, so the command path is relative to it [S9].
+**Configuration.** `canary init --agent cursor` writes `.cursor/hooks.json` in the project root [S9]. The generated command uses the absolute path of the installed bundle, as required by the built-runtime requirement; the checked-in example under `.cursor/hooks.json` uses a project-relative path and is not the generated configuration.
 
 ```json
 {
