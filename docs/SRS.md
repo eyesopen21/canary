@@ -188,28 +188,27 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 
 | ID | Requirement | Verification |
 | --- | --- | --- |
-| CAN-N-05 | The hook SHOULD answer in under 100 ms per command on a typical laptop. This is an initial target; a restricted Windows benchmark recorded a 535 ms median from the source checkout and 192 ms for the packaged JavaScript entry point. Starting an empty Node process took a 119 ms median in the same environment. | Benchmark; current measurement is not a cross-platform result |
+| CAN-N-05 | The hook SHOULD answer in under 100 ms per command on a typical laptop. This is an initial target, not a demonstrated result: two local Windows runs measured `node -e ""` floors of 1177.66 ms and 113.02 ms respectively, both at or above the absolute target. No recorded run has printed a hook median below 100 ms. | Benchmark; local Windows results only, with high variance |
 | CAN-N-06 | `canary scan` SHOULD finish in under 10 s on a repository of 5,000 tracked files. A measured run completed in 9.47 s after optimization; repeatable cross-platform measurement is outstanding. | Benchmark; current measurement is not a cross-platform result |
 
-Benchmark run on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD Ryzen 5 7535HS with Radeon Graphics (12 logical processors), Node v22.22.2. The harness used 5 warm-ups and 50 measured samples per row; values are median/p90 milliseconds. Generated hooks ran the configured `dist` entry. These are measurements from one local environment, not cross-platform results. Samples ran sequentially, and the Node startup floor p50 exceeds several hook p50 values. This indicates timing noise in this run; subtracting the floor does not provide meaningful per-hook spawn-overhead comparisons.
+Benchmark runs on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD Ryzen 5 7535HS with Radeon Graphics (12 logical processors), Node v22.22.2. The harness used 5 warm-ups and 50 measured samples per row; values are median/p90 milliseconds. All runs were local, sequential, and subject to large variance: an earlier recorded session measured a `node -e ""` floor of 1177.66/1868.79 ms, the "before" run below measured 113.02/119.05 ms, and the "after" run measured 138.45/172.23 ms. The three floors are not comparable, so neither hook table supports a reliable improvement or overhead claim. The absolute 100 ms target in CAN-N-05 is not met by any of these runs and may be below Node's startup floor on Windows.
 
-| Measurement | Event | Median (ms) | P90 (ms) |
+"Before" generated hooks invoked `dist/cli/entry.js hook --agent <name>`; "after" generated hooks invoke the per-agent `dist/hook/<agent>.mjs` bundle. Rows show median / p90 in ms.
+
+| Agent | Event | Before median / p90 | After median / p90 |
 | --- | --- | ---: | ---: |
-| `node -e ""` startup floor | — | 1177.66 | 1868.79 |
-| Claude Code configured hook | allow | 1598.26 | 3213.51 |
-| Claude Code configured hook | B3 block | 892.12 | 1134.44 |
-| Codex configured hook | allow | 672.81 | 1720.79 |
-| Codex configured hook | B3 block | 2882.19 | 4247.03 |
-| Cursor configured hook | allow | 2435.35 | 3627.15 |
-| Cursor configured hook | B3 block | 2167.03 | 3195.73 |
-| Gemini CLI configured hook | allow | 1158.28 | 1846.72 |
-| Gemini CLI configured hook | B3 block | 494.17 | 612.76 |
-| OpenCode configured hook | allow | 374.14 | 449.92 |
-| OpenCode configured hook | B3 block | 608.50 | 1874.08 |
-| Source `evaluate()` | allow | 0.05 | 0.11 |
-| Source `evaluate()` | B3 block | 0.06 | 0.18 |
-| Built `evaluate()` | allow | 0.03 | 0.07 |
-| Built `evaluate()` | B3 block | 0.06 | 0.24 |
+| Claude Code | allow | 174.63 / 183.85 | 209.71 / 324.25 |
+| Claude Code | B3 block | 174.50 / 183.05 | 179.42 / 238.18 |
+| Codex | allow | 203.18 / 216.06 | 236.38 / 322.43 |
+| Codex | B3 block | 207.96 / 223.42 | 315.07 / 493.21 |
+| Cursor | allow | 206.38 / 213.61 | 291.55 / 341.42 |
+| Cursor | B3 block | 202.68 / 219.97 | 280.49 / 359.64 |
+| Gemini CLI | allow | 204.34 / 215.31 | 307.27 / 398.09 |
+| Gemini CLI | B3 block | 203.12 / 218.37 | 384.85 / 482.62 |
+| OpenCode | allow | 167.47 / 177.40 | 239.27 / 283.81 |
+| OpenCode | B3 block | 168.61 / 179.75 | 226.73 / 264.51 |
+
+In-process `evaluate()` latency (excluding process startup, adapters and JSON I/O): before — source 0.03/0.07 ms allow, 0.03/0.06 ms B3; built 0.04/0.05 ms allow, 0.05/0.09 ms B3. After — source 0.03/0.08 ms allow, 0.05/0.13 ms B3; built 0.04/0.08 ms allow, 0.05/0.10 ms B3. These are not process-level hook measurements. No cross-platform result has been measured.
 
 ### 3.5 Logical data: `findings.json`
 
@@ -274,7 +273,7 @@ Benchmark run on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD R
 
 ### 4.1 Verification methods
 
-The latest reported local test run has 130 passing tests, 4 skips caused by unavailable sandbox capabilities, and no failures (134 tests total). The network-disabled integration check passed. A packaged offline smoke verified the five `init` target paths and ran the generated Cursor hook through the installed `PATH` against synthetic input, where it returned deny. A GitHub Actions matrix for Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest has been added, but that matrix has not yet run. These results do not establish all MVP acceptance criteria, and live-agent checks remain outstanding for all five integrations.
+The latest reported local test run has 140 passing tests, no skips and no failures (140 tests total), including bundle-level CAN-T-03/CAN-T-04 checks. The network-disabled integration check passed. A packaged offline smoke verified the five `init` target paths and ran the generated Cursor hook through the installed `PATH` against synthetic input, where it returned deny. A GitHub Actions matrix for Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest has been added, but that matrix has not yet run. These results do not establish all MVP acceptance criteria, and live-agent checks remain outstanding for all five integrations.
 
 | ID | Method | Covers |
 | --- | --- | --- |
