@@ -20,7 +20,7 @@ export const CURSOR_FAIL_CLOSED = Object.freeze({ failClosed: true          });
 /** Text for agents whose hook failure lets the action run. No secrets, no paths. */
 export const FAIL_OPEN_NOTICE = Object.freeze({
   codex:
-    "Canary: Codex does not document a fail-closed hook setting; a hook failure lets the command run.",
+    "Canary: Codex requires you to review and trust this project hook with /hooks before it runs. A hook failure lets the command run.",
   "gemini-cli":
     "Canary: Gemini CLI does not document a fail-closed hook setting; a hook failure lets the command run.",
   opencode:

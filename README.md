@@ -7,7 +7,7 @@ The repository contains a working local CLI and adapters for Claude Code, Codex,
 | Agent | Live AC-4 result |
 | --- | --- |
 | Claude Code | **Inconclusive** (installed and authenticated; live checks in default and `bypassPermissions` modes showed no attributable Canary decision; see [runbook](docs/testing/live-agent-checks.md#results)) |
-| Codex | **Unsupported** (live 2026-11-22: force push executed because `codex exec --trust` does not trust the non-managed hook; see [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
+| Codex | **Unsupported** (live 2026-11-22: an earlier force push executed because `codex exec --trust` did not trust the non-managed hook. A fresh sandbox rerun could not reach `/hooks` review or the test-only trust path because Codex could not initialize its local state database; neither check command ran. See [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
 | Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
 | Gemini CLI | **Unverified** (CLI not installed; AC-4 unverified; see the install and authentication workflow in the [runbook](docs/testing/live-agent-checks.md#gemini-cli--q3-yolo)) |
 | OpenCode | **Unsupported** (live 2026-11-22: sentinel delete executed with no Canary decision; force push denied by the generated `opencode.jsonc` rule, not Canary; see [runbook](docs/testing/live-agent-checks.md#results)) |
@@ -39,7 +39,7 @@ canary init --agent claude-code
 canary crash-test
 ```
 
-`canary init` previews the full diff of Canary's changes before writing. The preview omits unchanged existing values and redacts sensitive values. It prints a reminder that Node.js must be available when hooks run; it also reports where hook failures can let commands proceed. The `crash-test` command is designed to use an isolated temporary directory. Review [the threat model](docs/THREAT-MODEL.md) for scope and limitations.
+`canary init` previews the full diff of Canary's changes before writing. The preview omits unchanged existing values and redacts sensitive values. It prints a reminder that Node.js must be available when hooks run; for Codex, it also says to review and trust the current project hook with `/hooks` before it runs [S8]. It reports where hook failures can let commands proceed. The `crash-test` command is designed to use an isolated temporary directory. Review [the threat model](docs/THREAT-MODEL.md) for scope and limitations.
 
 Supported `--agent` values are `claude-code`, `codex`, `cursor`, `gemini-cli`, and `opencode`.
 
