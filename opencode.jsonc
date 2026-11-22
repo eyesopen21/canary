@@ -1,0 +1,6 @@
+{
+  // Barrier layer: deny the documented irreversible example [S16].
+  "permissions": [
+    { "action": "shell", "resource": "git push --force *", "effect": "deny" }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/hook.js", "--agent", "claude-code"],
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/dist/hook.js\" --agent codex",
+            "timeout": 10,
+            "statusMessage": "Canary: checking command"
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "name": "canary",
+            "type": "command",
+            "command": "node \"${extensionPath}${/}dist${/}hook.js\" --agent gemini-cli",
+            "timeout": 10000,
+            "description": "Blocks irreversible shell commands"
+          }
+        ]
+      }
+    ]
+  }
+}
