@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { homedir } from "node:os";
 import { execFileSync, spawnSync } from "node:child_process";
 
@@ -250,7 +250,7 @@ test("a hook from a git archive runs built JavaScript without loading TypeScript
       tool_input: { command: "git push --force origin main" },
       cwd: archivedPackage,
     });
-    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--import", typeGuard, entry, ...hook.args.slice(1)], {
+    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--import", pathToFileURL(typeGuard).href, entry, ...hook.args.slice(1)], {
       cwd: archivedPackage,
       env,
       input: event,
