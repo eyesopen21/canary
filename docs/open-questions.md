@@ -67,7 +67,7 @@ The hook is only as strong as the agent that runs it. These questions decide wha
 
 | ID | Question | Current evidence | Status |
 | --- | --- | --- | --- |
-| Q24 | Can the live-check setup script run its local bare-remote force-push preflight in restricted Windows temp environments? | On 2026-11-22, `node scripts/live-check-setup.mjs --agent codex` exited with `LOCAL_REMOTE_UNAVAILABLE` at the force-push dry run after seeding and verifying the bare ref. Do not treat setup as ready until the dry run succeeds in the target environment. | Open |
+| Q24 | Can the live-check setup script run its local bare-remote force-push preflight in restricted Windows temp environments? | On 2026-11-22 one run in a restricted harness exited with `LOCAL_REMOTE_UNAVAILABLE` at the force-push dry run after the bare ref was seeded and verified. Three later runs in the same operating-system temp environment printed `Sandbox ready` and produced a valid sentinel, bare ref and generated hook config. The failure is environment-specific rather than a reproducible script defect; the script now reports the short Git diagnostic with the code. The destructive commands themselves are still verified only by the live human run. | Open for restricted harnesses; working in the standard Windows temp environment |
 
 ## Notes on inputs not used
 

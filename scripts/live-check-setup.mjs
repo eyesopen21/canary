@@ -76,7 +76,8 @@ function run(file, args, options, step) {
     else if (/does not appear to be a git repository|Could not read from remote repository/i.test(errorText)) code = "LOCAL_REMOTE_UNAVAILABLE";
     else if (/src refspec .* does not match any/i.test(errorText)) code = "LOCAL_BRANCH_NOT_FOUND";
     else if (/not a git repository/i.test(errorText)) code = "LOCAL_REPOSITORY_UNAVAILABLE";
-    throw new Error(step + " (" + code + ")");
+    const detail = errorText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)[0] ?? "";
+    throw new Error(step + " (" + code + ")" + (detail ? ": " + detail.slice(0, 200) : ""));
   }
 }
 
