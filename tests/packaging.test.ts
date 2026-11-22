@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -258,8 +258,60 @@ test("a hook from a git archive runs built JavaScript without loading TypeScript
       encoding: "utf8",
     });
     assert.equal(result.status, 0, `archived hook must start: ${result.stderr}`);
-    assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision, "deny");
+    let output;
+    try {
+      output = JSON.parse(result.stdout);
+    } catch {
+      assert.fail(
+        `archived hook must emit valid JSON on stdout; status=${result.status}; ` +
+        `stdout=${JSON.stringify(result.stdout)}; stderr=${JSON.stringify(result.stderr)}`,
+      );
+    }
+    assert.equal(
+      output.hookSpecificOutput?.permissionDecision,
+      "deny",
+      `archived hook must deny the force push; stderr=${JSON.stringify(result.stderr)}`,
+    );
     assert.equal(result.stderr, "");
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("a hook launched through a symlinked directory still evaluates", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "canary-symlink-"));
+  const realDirectory = join(temporary, "real");
+  const linkedDirectory = join(temporary, "linked");
+  try {
+    // A single self-contained bundle is enough: it imports only node: builtins.
+    mkdirSync(realDirectory);
+    cpSync(resolve(root, "dist", "hook", "claude-code.mjs"), join(realDirectory, "claude-code.mjs"));
+    // Windows runners allow directory junctions without elevated privileges;
+    // POSIX runners use a normal symlink. Both make the launch path (argv[1])
+    // differ from the realpath Node reports through import.meta.url.
+    symlinkSync(realDirectory, linkedDirectory, process.platform === "win32" ? "junction" : "dir");
+    const entry = join(linkedDirectory, "claude-code.mjs");
+    const event = JSON.stringify({
+      tool_name: "Bash",
+      tool_input: { command: "git push --force origin main" },
+      cwd: root,
+    });
+    const result = spawnSync(process.execPath, [entry], { cwd: root, input: event, encoding: "utf8" });
+    assert.equal(result.status, 0, `symlinked hook must start: ${result.stderr}`);
+    let output;
+    try {
+      output = JSON.parse(result.stdout);
+    } catch {
+      assert.fail(
+        `symlinked hook must emit valid JSON on stdout; status=${result.status}; ` +
+        `stdout=${JSON.stringify(result.stdout)}; stderr=${JSON.stringify(result.stderr)}`,
+      );
+    }
+    assert.equal(
+      output.hookSpecificOutput?.permissionDecision,
+      "deny",
+      `symlinked hook must deny the force push; stderr=${JSON.stringify(result.stderr)}`,
+    );
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

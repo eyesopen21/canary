@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CursorWarnLogEntry } from "../adapters/cursor.ts";
@@ -57,7 +57,21 @@ export function startHookIfDirect(
   onFailure?: () => object | null,
 ): void {
   const entry = process.argv[1];
-  if (!entry || path.resolve(entry) !== path.resolve(fileURLToPath(moduleUrl))) return;
+  if (!entry) return;
+  const modulePath = fileURLToPath(moduleUrl);
+  // Node resolves the main ES module to its realpath for `import.meta.url`
+  // while `process.argv[1]` keeps the path used to launch it. A hook launched
+  // through a symlinked directory (for example a macOS temp dir, where /var
+  // points at /private/var) must still be recognized as the direct entry, or
+  // it exits successfully without evaluating anything.
+  const isDirectEntry = (() => {
+    try {
+      return realpathSync(entry) === realpathSync(modulePath);
+    } catch {
+      return path.resolve(entry) === path.resolve(modulePath);
+    }
+  })();
+  if (!isDirectEntry) return;
 
   try {
     const payload: unknown = JSON.parse(readFileSync(0, "utf8"));

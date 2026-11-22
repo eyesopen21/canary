@@ -112,6 +112,7 @@ const __factories = {
   "hook/runtime.js": (__exports, __require) => {
     const __imported0 = __require("node:fs");
     const readFileSync = __imported0["readFileSync"];
+    const realpathSync = __imported0["realpathSync"];
     const __imported1 = __require("node:path");
     const path = __imported1["default"];
     const __imported2 = __require("node:url");
@@ -174,7 +175,21 @@ const __factories = {
       onFailure                      ,
     )       {
       const entry = process.argv[1];
-      if (!entry || path.resolve(entry) !== path.resolve(fileURLToPath(moduleUrl))) return;
+      if (!entry) return;
+      const modulePath = fileURLToPath(moduleUrl);
+      // Node resolves the main ES module to its realpath for `import.meta.url`
+      // while `process.argv[1]` keeps the path used to launch it. A hook launched
+      // through a symlinked directory (for example a macOS temp dir, where /var
+      // points at /private/var) must still be recognized as the direct entry, or
+      // it exits successfully without evaluating anything.
+      const isDirectEntry = (() => {
+        try {
+          return realpathSync(entry) === realpathSync(modulePath);
+        } catch {
+          return path.resolve(entry) === path.resolve(modulePath);
+        }
+      })();
+      if (!isDirectEntry) return;
     
       try {
         const payload          = JSON.parse(readFileSync(0, "utf8"));

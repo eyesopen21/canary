@@ -31,6 +31,7 @@ The npm package is not published. This section records repository changes; it do
 - C3 link containment now compares canonical paths, so an in-repository symlink or junction under a symlinked root (for example macOS `/var` → `/private/var`) is no longer reported as escaping while a genuinely escaping link is still reported. The C3 link fixtures now use a canonical absolute temporary base.
 - The setup script now reports Git's short diagnostic with `LOCAL_REMOTE_UNAVAILABLE`, so a restricted-harness transport block can be distinguished from a script defect. Q24 records both outcomes.
 - Generated hook paths are now asserted to be absolute, and README no longer says hooks require `canary` on `PATH`.
+- Command hooks now recognize a direct launch through a symlinked directory. Node resolves the main module to its realpath for `import.meta.url` while `argv[1]` keeps the launch path, so macOS temporary paths (`/var` to `/private/var`) previously made a hook exit silently with no decision. The packaged `git archive` test now reports invalid stdout with stderr in its diagnostic.
 
 ### Changed
 
