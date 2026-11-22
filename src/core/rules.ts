@@ -103,24 +103,6 @@ function recursiveDeleteTargets(tokens: string[]): string[] | null {
   return null;
 }
 
-/**
- * D3 cheap pre-gate for the B1 path. `checkDeleteTarget` is the only place in
- * the evaluator that performs filesystem calls (realpath, via `realPathOrSelf`),
- * so a segment that cannot be a recursive delete must not enter that path.
- *
- * The predicate is deliberately a superset of the commands B1 recognizes:
- * `tokenize`/`unquote`/`commandName` only drop quotes, backslashes and a
- * leading path, so stripping those characters from the raw segment leaves any
- * B1 command name intact. False positives merely send a segment through the
- * existing exact classifier (which then rejects it); false negatives are not
- * possible, so no command that currently blocks can become allowed.
- */
-const B1_COMMAND_WORDS = /\b(?:rm|rimraf|remove-item|ri|del|rmdir|rd|find)\b/i;
-
-export function mayBeRecursiveDelete(segment: string): boolean {
-  return B1_COMMAND_WORDS.test(segment.replace(/['"\\]/g, ""));
-}
-
 function classifyRecursiveDelete(
   tokens: string[],
   context: ClassificationContext,
@@ -350,7 +332,7 @@ export function classifySegment(segment: string, context: ClassificationContext)
   if (tokens.length === 0) return [];
 
   const matches: RuleMatch[] = [];
-  const b1 = mayBeRecursiveDelete(segment) ? classifyRecursiveDelete(tokens, context) : null;
+  const b1 = classifyRecursiveDelete(tokens, context);
   if (b1) matches.push(b1);
   const b2 = classifyDatabase(tokens, context);
   if (b2) matches.push(b2);
