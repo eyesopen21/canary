@@ -230,7 +230,7 @@ test("a hook from a git archive runs built JavaScript without loading TypeScript
     assert.equal(hook.command, "node");
     assert.deepEqual(hook.args.slice(1), ["hook", "--agent", "claude-code"]);
     const entry = hook.args[0].replace("${CLAUDE_PLUGIN_ROOT}", archivedPackage);
-    assert.equal(entry, resolve(archivedPackage, "dist/cli/entry.js"));
+    assert.equal(resolve(entry), resolve(archivedPackage, "dist/cli/entry.js"));
 
     const typeGuard = join(temporary, "reject-typescript.mjs");
     writeFileSync(typeGuard, [
