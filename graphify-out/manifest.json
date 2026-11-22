@@ -264,21 +264,21 @@
     "semantic_hash": ""
   },
   "src/cli/init-files.ts": {
-    "mtime": 1795372014.452993,
-    "seen": 1795377929.2531538,
-    "ast_hash": "27c8e998809a13858cd00ec2ed11a738",
+    "mtime": 1795378552.8043554,
+    "seen": 1795379492.7780979,
+    "ast_hash": "3acb02c269a1a8243d98ffebf94a4d38",
     "semantic_hash": ""
   },
   "src/cli/init.ts": {
-    "mtime": 1795377324.7483957,
-    "seen": 1795377929.2531583,
-    "ast_hash": "8f0b13fd122a4cb704282fef60096a2f",
+    "mtime": 1795378552.812359,
+    "seen": 1795379492.7781222,
+    "ast_hash": "b087d3295010f37c3254087036be0b6b",
     "semantic_hash": ""
   },
   "src/cli/main.ts": {
-    "mtime": 1795371993.3317876,
-    "seen": 1795377929.2531629,
-    "ast_hash": "dda60df9f186026932e77d5fd44f399f",
+    "mtime": 1795378552.8170397,
+    "seen": 1795379492.7781317,
+    "ast_hash": "62d44ec41d2cbd698adc27c312e5f69e",
     "semantic_hash": ""
   },
   "src/cli/output.ts": {
@@ -342,8 +342,8 @@
     "semantic_hash": ""
   },
   "src/core/host.ts": {
-    "mtime": 1795357699.8914192,
-    "seen": 1795371724.2260299,
+    "mtime": 1795379346.4047341,
+    "seen": 1795379492.7782376,
     "ast_hash": "b996b3fceebbe41870f7e14a9970b7a3",
     "semantic_hash": ""
   },
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "src/core/rules.ts": {
-    "mtime": 1795357699.89522,
-    "seen": 1795371724.2260432,
+    "mtime": 1795379346.4092848,
+    "seen": 1795379492.778254,
     "ast_hash": "15c0c432359cef2fd93def49fa99275e",
     "semantic_hash": ""
   },
@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795372137.9894555,
-    "seen": 1795377929.2533884,
-    "ast_hash": "601486bd56e435a6463ad255debaeac1",
+    "mtime": 1795379466.4290025,
+    "seen": 1795379492.7784884,
+    "ast_hash": "8bcee7177bbf767cf00ab42f73988dff",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795377224.194296,
-    "seen": 1795377929.2534018,
-    "ast_hash": "17657030247bea8bf6b4ee1b30fb7c1d",
+    "mtime": 1795378867.5627406,
+    "seen": 1795379492.7785046,
+    "ast_hash": "0545c2936cae01143098864950885abd",
     "semantic_hash": ""
   },
   "SECURITY.md": {
@@ -540,15 +540,15 @@
     "semantic_hash": ""
   },
   "docs/AGENT-WBS.md": {
-    "mtime": 1795371035.1981466,
-    "seen": 1795371724.2261655,
-    "ast_hash": "19f0338a0971e9e8f48448b97dc68740",
+    "mtime": 1795379447.2757936,
+    "seen": 1795379492.7785141,
+    "ast_hash": "42ee48674fe59e64ca53ded1ccdf2b74",
     "semantic_hash": ""
   },
   "docs/SRS.md": {
-    "mtime": 1795377554.385988,
-    "seen": 1795377929.2534158,
-    "ast_hash": "ce8a94e1d5a0775c6b6e92d560ad6e80",
+    "mtime": 1795379472.9229245,
+    "seen": 1795379492.7785218,
+    "ast_hash": "9080fdd72c3c9244df14f5dc875af345",
     "semantic_hash": ""
   },
   "docs/THREAT-MODEL.md": {
@@ -594,15 +594,15 @@
     "semantic_hash": ""
   },
   "docs/decisions/README.md": {
-    "mtime": 1795372573.0328565,
-    "seen": 1795377929.253461,
-    "ast_hash": "058389d54f0416776367b58974b02887",
+    "mtime": 1795379429.9212232,
+    "seen": 1795379492.778576,
+    "ast_hash": "61ea78c1fa0c40e07658ba0d6a22bff7",
     "semantic_hash": ""
   },
   "docs/open-questions.md": {
-    "mtime": 1795377230.352836,
-    "seen": 1795377929.2534654,
-    "ast_hash": "85f9daca7a1a8691ec23dec7132c2d40",
+    "mtime": 1795378861.3260489,
+    "seen": 1795379492.7785828,
+    "ast_hash": "685717423e962c78ac5bb291241f2a24",
     "semantic_hash": ""
   },
   "docs/sources.md": {
@@ -612,9 +612,9 @@
     "semantic_hash": ""
   },
   "docs/specs/agent-adapters.md": {
-    "mtime": 1795377596.0428112,
-    "seen": 1795377929.253474,
-    "ast_hash": "43952a37288dac5acf7f864178c48314",
+    "mtime": 1795379391.148929,
+    "seen": 1795379492.7785923,
+    "ast_hash": "10d321f18ec818ccf2ca62a402628a68",
     "semantic_hash": ""
   },
   "docs/specs/policy.md": {
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/agent-adapters/spec.md": {
-    "mtime": 1795377679.09949,
-    "seen": 1795377929.2535372,
-    "ast_hash": "b2b911f1f99e19ed467c4b0a297fd125",
+    "mtime": 1795378552.796942,
+    "seen": 1795379492.778659,
+    "ast_hash": "7bbaf55a7e81522ff5ce8ca4d0e0230e",
     "semantic_hash": ""
   },
   "openspec/specs/hook-policy/spec.md": {
@@ -723,12 +723,6 @@
     "mtime": 1795371930.810951,
     "seen": 1795377929.2531443,
     "ast_hash": "e40e3c2a7009598430d89fa69b9505a4",
-    "semantic_hash": ""
-  },
-  "src/cli/mcp-server.ts": {
-    "mtime": 1795372410.2053418,
-    "seen": 1795377929.2531672,
-    "ast_hash": "af2609f3b27071289c1f528257e519f2",
     "semantic_hash": ""
   },
   "src/hook/claude-code.ts": {
@@ -786,15 +780,15 @@
     "semantic_hash": ""
   },
   "docs/decisions/0008-mcp-tool-hooks.md": {
-    "mtime": 1795372493.439831,
-    "seen": 1795377929.2534564,
-    "ast_hash": "707bd41c38e9f77cfe3e7c5693fe28b7",
+    "mtime": 1795379409.685988,
+    "seen": 1795379492.778571,
+    "ast_hash": "57d31e992f72f89197cca05bc7652baf",
     "semantic_hash": ""
   },
   "docs/testing/live-agent-checks.md": {
-    "mtime": 1795377104.8581815,
-    "seen": 1795377929.253483,
-    "ast_hash": "87db726409bf82f42b7faf0da2f8f2bb",
+    "mtime": 1795379397.7759838,
+    "seen": 1795379492.7786033,
+    "ast_hash": "0e3d244ec8ac221849655b9f24763f4f",
     "semantic_hash": ""
   },
   "assets/banners/canary-germanico-banner-1508x158.png": {
@@ -831,6 +825,18 @@
     "mtime": 1795375207.1774428,
     "seen": 1795377929.2535672,
     "ast_hash": "cbdd4c13ce1001c31e61fb2cc4cc5d21",
+    "semantic_hash": ""
+  },
+  "src/mcp-hook/config.ts": {
+    "mtime": 1795378552.819063,
+    "seen": 1795379492.778371,
+    "ast_hash": "1280dc04740688bbe9779354aacfaec0",
+    "semantic_hash": ""
+  },
+  "src/mcp-hook/server.ts": {
+    "mtime": 1795378552.8215947,
+    "seen": 1795379492.7783768,
+    "ast_hash": "e42eb362f07e091bed7a67f762fd3a9f",
     "semantic_hash": ""
   }
 }

@@ -1,6 +1,6 @@
 # Architecture decision records
 
-Decisions are recorded in the MADR format [S20] (see [sources.md](../sources.md)). Each file has front matter with `status` and `date`, then the sections Context and Problem Statement, Decision Drivers, Considered Options, Decision Outcome (with Consequences and Confirmation), Pros and Cons of the Options, and More Information.
+Decisions are recorded in the MADR format [S20] (see [sources.md](../sources.md)). Each file records `status` and `date` in front matter or a status table, then the sections Context and Problem Statement, Decision Drivers, Considered Options, Decision Outcome (with Consequences and Confirmation), Pros and Cons of the Options, and More Information.
 
 | ADR | Title | Status |
 | --- | --- | --- |

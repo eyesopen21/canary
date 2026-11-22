@@ -24,6 +24,7 @@ The npm package is not published. This section records repository changes; it do
 - `scripts/live-check-setup.mjs` and `docs/testing/live-agent-checks.md`: a disposable OS-temp sandbox with a local bare remote and harmless sentinel, plus a per-agent manual runbook for AC-4. All five agents remain `Unverified`; no live session is claimed.
 - `scripts/build.mjs` now emits `dist/hook/<agent>.mjs`: one self-contained bundle per agent with the core and only that adapter, `node:` imports only, stdin/stdout, no CLI dispatch, and a build failure on relative imports. Versioned manifests and `canary init` point at these bundles; `onFailure: "block"` and `failClosed: true` are preserved. CAN-T-03 and CAN-T-04 also exercise the bundles directly. See the amendment to [ADR-0007](docs/decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 - Benchmark measurements for local Windows before and after the bundle change are recorded in the SRS. The runs had different Node startup floors and are not presented as evidence of a speedup; the 100 ms target remains unmet.
+- The opt-in MCP tool prototype now lives in `src/mcp-hook/` behind `--mcp-tool`; the default `init` path stays a command hook. [ADR-0008](docs/decisions/0008-mcp-tool-hooks.md) remains `proposed`, records the synthetic `npm run bench:mcp` result, and does not claim live-agent verification or secret-free inputs.
 
 ### Fixed
 
@@ -33,3 +34,11 @@ The npm package is not published. This section records repository changes; it do
 ### Changed
 
 - Documented the Codex shell-string launch cost [S8] and the Cursor Windows/PowerShell shell layer [S9] in the adapter specification and its paired OpenSpec capability; no hook configuration changed.
+
+### Performance experiments (not kept)
+
+Three optimizations were implemented in isolated branches, measured separately, and reverted; they are not part of the integrated tree.
+
+- `module.enableCompileCache()` with a per-user, plugin-owned directory: it cannot speed up the shipped bundles because the entry module is compiled before the cache can be enabled and the bundles contain no later user-module loads. A local A/B measurement showed no gain (cache-disabled median 249.50 ms vs warm-cache 246.98 ms). No cache-poisoning risk was added to T9 because the code was not kept.
+- Lazy `.env` / `.env.local` reads for B2 candidates: behavior-preserving in focused parity tests, but the full benchmark showed no reliable median improvement (control floor 240.88 ms vs 162.41 ms; hook medians mixed), below the 5 ms keep threshold.
+- Syntactic gate for B1 `realpath`/`lstat` calls: reverted after review found a false negative — stripping backslashes made `bin\rm -rf ../outside` evaluate as `allow` instead of `block`. The benchmark also showed no reliable gain (floor 173.57 ms).

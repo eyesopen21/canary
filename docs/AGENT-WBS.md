@@ -17,8 +17,8 @@ This document turns the existing documentation into agent-sized work packages. I
 | `docs/specs/policy.md` | Hook rules B0–B4 and W1–W3, evaluation order, exact message text, placeholders, examples | `CAN-F-04`, `CAN-F-05`, `CAN-F-06` |
 | `docs/specs/agent-adapters.md` | Five agent hook interfaces, fields, fail-closed settings, pitfalls | `CAN-F-19`, `CAN-I-03`, `CAN-I-05`…`07`, `CAN-F-21` |
 | `docs/THREAT-MODEL.md` | Ten threats, mitigations, residual risk, tests that close each mitigation | T1…T10 |
-| `docs/decisions/` | Architecture decisions and their confirmation tests | ADR-0001…ADR-0006 |
-| `docs/open-questions.md` | Assumptions and things that need live verification | A1…A9, Q1…Q18 |
+| `docs/decisions/` | Architecture decisions and their confirmation tests | ADR-0001…ADR-0008 |
+| `docs/open-questions.md` | Assumptions and things that need live verification | A1…A9, Q1…Q26 |
 | `README.md` | Planned command surface and public claims | `scan`, `hook`, `init`, `crash-test`, `badge`; roadmap `fix`, `freeze`, `rules`, `scan --ci` |
 | `AGENTS.md` | Planned source layout, repository rules, workflow | `src/core/`, `src/adapters/`, `src/cli/`, `fixtures/`, `tests/`, packaging |
 | `openspec/specs/` | Machine-checkable behavior for the hook core and the adapters | capabilities `hook-policy`, `agent-adapters` |
@@ -58,7 +58,7 @@ The current OpenSpec baseline covers only the first two rows of the behavior sur
 | --- | --- | --- | --- |
 | WP-10 | Live agent checks | Run a blocked command in each of the five agents in a disposable repo; record agent version and result; mark unsupported agents in the README. | `CAN-T-05`, `AC-4`, Q1…Q5 |
 | WP-11 | Public claims review | README limits table, fail-open warnings for Codex and Gemini CLI, neutral language, license, MIT and score disclaimer. | `CAN-N-08`, `CAN-U-03`, `CAN-N-09`, `AC-7`, T4, T5 |
-| WP-12 | Open questions and residual risk | Move answered Q1…Q7 to Resolved with evidence; confirm A8 and A9; review the threat model after the code lands. | Q1…Q18, A1…A9, threat model section 4 |
+| WP-12 | Open questions and residual risk | Move answered Q1…Q7 to Resolved with evidence; confirm A8 and A9; review the threat model after the code lands. | Q1…Q26, A1…A9, threat model section 4 |
 
 ### Backlog — not in the MVP
 
@@ -121,4 +121,4 @@ Agents MUST NOT claim that live-agent checks (WP-10) passed, describe a roadmap 
 | `CAN-T-07`, `CAN-T-08` | WP-05, WP-09 |
 | `AC-1`…`AC-8` | WP-08, WP-09, WP-10, WP-11 |
 | T1…T10 | WP-01…WP-11 (mitigations), WP-13…WP-19 (remaining roadmap) |
-| Q1…Q18, A1…A9 | WP-07, WP-10, WP-12 |
+| Q1…Q26, A1…A9 | WP-07, WP-10, WP-12 |

@@ -208,7 +208,7 @@ Benchmark runs on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD 
 | OpenCode | allow | 167.47 / 177.40 | 239.27 / 283.81 |
 | OpenCode | B3 block | 168.61 / 179.75 | 226.73 / 264.51 |
 
-In-process `evaluate()` latency (excluding process startup, adapters and JSON I/O): before — source 0.03/0.07 ms allow, 0.03/0.06 ms B3; built 0.04/0.05 ms allow, 0.05/0.09 ms B3. After — source 0.03/0.08 ms allow, 0.05/0.13 ms B3; built 0.04/0.08 ms allow, 0.05/0.10 ms B3. These are not process-level hook measurements. No cross-platform result has been measured.
+In-process `evaluate()` latency (excluding process startup, adapters and JSON I/O): before — source 0.03/0.07 ms allow, 0.03/0.06 ms B3; built 0.04/0.05 ms allow, 0.05/0.09 ms B3. After — source 0.03/0.08 ms allow, 0.05/0.13 ms B3; built 0.04/0.08 ms allow, 0.05/0.10 ms B3. These are not process-level hook measurements. No cross-platform result has been measured. Three further local runs were made while testing separate optimizations: a control run with a 240.88 ms floor, a B1-gate run with a 173.57 ms floor, and a lazy-env run with a 162.41 ms floor. Their hook medians moved in both directions and none showed a repeatable 5 ms improvement, so all three optimizations were reverted; see `CHANGELOG.md`. These floors confirm that the harness is too noisy for per-optimization claims on this machine.
 
 ### 3.5 Logical data: `findings.json`
 
@@ -273,7 +273,7 @@ In-process `evaluate()` latency (excluding process startup, adapters and JSON I/
 
 ### 4.1 Verification methods
 
-The latest reported local test run has 140 passing tests, no skips and no failures (140 tests total), including bundle-level CAN-T-03/CAN-T-04 checks. The network-disabled integration check passed. A packaged offline smoke verified the five `init` target paths and ran the generated Cursor hook through the installed `PATH` against synthetic input, where it returned deny. A GitHub Actions matrix for Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest has been added, but that matrix has not yet run. These results do not establish all MVP acceptance criteria, and live-agent checks remain outstanding for all five integrations.
+The latest reported local test run has 140 passing tests, no skips and no failures (140 tests total), including bundle-level CAN-T-03/CAN-T-04 checks. The network-disabled integration check passed. A packaged offline smoke verified the five `init` target paths and ran the generated Cursor bundle through `process.execPath` with an absolute path against synthetic input, where it returned deny; a `canary` executable on `PATH` is not required. A GitHub Actions matrix for Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest has been added, but that matrix has not yet run. These results do not establish all MVP acceptance criteria, and live-agent checks remain outstanding for all five integrations.
 
 | ID | Method | Covers |
 | --- | --- | --- |
@@ -335,6 +335,12 @@ These requirements come from the design notes [S24]. They are not specified in d
 | CAN-F-06 | S24 | policy.md B1 | [hook-policy](../openspec/specs/hook-policy/spec.md) | CAN-T-03 | AC-3 |
 | CAN-F-07 | S24 | ADR-0004 | — | CAN-T-06 | AC-5 |
 | CAN-F-08 | S24 | ADR-0003 | — | CAN-T-02 | AC-2 |
+| CAN-U-01 to CAN-U-03 | Design, S24 | README, policy.md | [hook-policy](../openspec/specs/hook-policy/spec.md) | CAN-T-03 | AC-3, AC-7 |
+| CAN-C-01 | Maintainer input, A5 | ADR-0006 | — | Build | — |
+| CAN-C-02 | ADR-0001 | ADR-0001 | — | CAN-T-08 | AC-1 |
+| CAN-C-03 | ADR-0005 | ADR-0005, agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04 | AC-3 |
+| CAN-C-04 | S4, S8, S9, S12, S13, S16 | agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-09 | — |
+| CAN-N-09 | S24 | LICENSE | — | File check | — |
 | CAN-F-19 | Maintainer input, S1, S8, S9, S10, S11, S14 | ADR-0005, agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04, CAN-T-05 | AC-3, AC-4 |
 | CAN-C-05 | ADR-0007, S4, S8, S12 | ADR-0007 | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-09 | — |
 | CAN-F-21 | S1, S8, S9, S10, S14 | ADR-0002, agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04 | AC-7 |
@@ -354,7 +360,7 @@ These requirements come from the design notes [S24]. They are not specified in d
 
 ## Appendix A. Assumptions and dependencies
 
-Assumptions A1 to A9 and open questions Q1 to Q18 are kept in [open-questions.md](open-questions.md) so that they are updated in one place. The requirements that depend most on them:
+Assumptions A1 to A9 and open questions Q1 to Q26 are kept in [open-questions.md](open-questions.md) so that they are updated in one place. The requirements that depend most on them:
 
 - CAN-F-19 and AC-4 depend on Q1 to Q5.
 - CAN-F-21 depends on Q6 and Q7.

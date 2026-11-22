@@ -246,7 +246,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 **Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds permission rules to `opencode.jsonc` [S13][S16]. The generated plugin starts Node in exec form with the absolute path to `dist/hook/opencode.mjs` and passes the synthetic permission event on stdin; it does not pass `hook --agent` arguments. The checked-in example under `.opencode/plugins/canary/` uses the same bundle through `execFileSync`.
 
-The generated plugin calls the built entry with `execFileSync(process.execPath, [buildPath, "hook", "--agent", "opencode"], ...)` and applies a returned `ask` or `deny` decision to the V2 permission event. This keeps policy in the shared core and avoids a `canary` executable or Windows `.cmd` shim on `PATH`.
+The generated plugin calls the bundle with `execFileSync(process.execPath, [bundlePath], ...)`, passing the event on stdin, and applies a returned `ask` or `deny` decision to the V2 permission event. This keeps policy in the shared core and avoids a `canary` executable or Windows `.cmd` shim on `PATH`.
 
 - `evaluate` hooks run for `allow` and `ask` decisions; an explicit configured `deny` is final and does not invoke the hook [S14].
 - A hook may change `effect` to `allow`, `ask`, or `deny`, and `message` becomes the denial reason [S14].
