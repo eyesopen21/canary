@@ -2,14 +2,14 @@
 
 Canary scans a repository for selected agent-related risks and provides a command hook that blocks a small set of destructive shell commands. It is a local guardrail, not a security boundary.
 
-The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. One live AC-4 pass is recorded (Cursor); Codex failed its live check and is listed as unsupported, and the other three remain unverified or inconclusive:
+The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. One live AC-4 pass is recorded (Cursor); Codex and OpenCode failed live checks and are listed as unsupported, Claude Code is inconclusive, and Gemini CLI remains unavailable pending setup:
 
 | Agent | Live AC-4 result |
 | --- | --- |
-| Claude Code | **Unverified** |
+| Claude Code | **Inconclusive** (installed and authenticated; live checks in default and `bypassPermissions` modes showed no attributable Canary decision; see [runbook](docs/testing/live-agent-checks.md#results)) |
 | Codex | **Unsupported** (live 2026-11-22: force push executed because `codex exec --trust` does not trust the non-managed hook; see [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
 | Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
-| Gemini CLI | **Unverified** |
+| Gemini CLI | **Unverified** (CLI not installed; AC-4 unverified; see the install and authentication workflow in the [runbook](docs/testing/live-agent-checks.md#gemini-cli--q3-yolo)) |
 | OpenCode | **Unsupported** (live 2026-11-22: sentinel delete executed with no Canary decision; force push denied by the generated `opencode.jsonc` rule, not Canary; see [runbook](docs/testing/live-agent-checks.md#results)) |
 
 Do not change a status until a human has completed and recorded that agent's run in [the live-agent runbook](docs/testing/live-agent-checks.md). See also [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
