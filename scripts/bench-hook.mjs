@@ -18,7 +18,10 @@ const ALLOW_COMMAND = "git status --short";
 const BLOCK_COMMAND = "git push --force origin main";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CORE_EVALUATOR = path.join(ROOT, "dist", "core", "evaluate.js");
-const { evaluate } = await import(pathToFileURL(CORE_EVALUATOR).href);
+const EVALUATORS = {
+  src: (await import(pathToFileURL(path.join(ROOT, "src", "core", "evaluate.ts")).href)).evaluate,
+  dist: (await import(pathToFileURL(CORE_EVALUATOR).href)).evaluate,
+};
 const { initAgent } = await import(pathToFileURL(path.join(ROOT, "src", "cli", "init.ts")).href);
 
 const AGENTS = ["claude-code", "codex", "cursor", "gemini-cli", "opencode"];
@@ -49,17 +52,16 @@ function generatedHook(root, agent) {
       return {
         command: hook.command,
         args: hook.args.map(String),
-        commandDisplay: `${hook.command} ${hook.args.map((value) => JSON.stringify(String(value))).join(" ")}`,
       };
     }
-    return { command: hook.command, shell: true, commandDisplay: hook.command };
+    return { command: hook.command, shell: true };
   }
 
   if (agent === "cursor") {
     const config = readJson(root, ".cursor/hooks.json");
     const hook = config.hooks.preToolUse.find((item) => item.matcher === "Shell");
     if (!hook || typeof hook.command !== "string") throw new Error("Generated Cursor hook config was not found.");
-    return { command: hook.command, shell: true, commandDisplay: hook.command };
+    return { command: hook.command, shell: true };
   }
 
   const plugin = readFileSync(path.join(root, ".opencode", "plugins", "canary", "index.ts"), "utf8");
@@ -69,7 +71,6 @@ function generatedHook(root, agent) {
   return {
     command: process.execPath,
     args,
-    commandDisplay: `process.execPath ${JSON.stringify(args)}`,
   };
 }
 
@@ -225,7 +226,6 @@ try {
       hookRows.push([
         agent,
         decision,
-        `\`${config.command}\``,
         formatMs(result.median),
         formatMs(result.p90),
       ]);
@@ -233,33 +233,36 @@ try {
   }
 
   const evaluatorRows = [];
-  for (const [decision, command] of [["allow", ALLOW_COMMAND], ["B3", BLOCK_COMMAND]]) {
-    const input = {
-      command,
-      cwd: temporaryRoot,
-      projectRoot: temporaryRoot,
-      env: {},
-    };
-    const result = sample(
-      `evaluate() ${decision}`,
-      () => {
-        const started = performance.now();
-        const value = evaluate(input);
-        return { value, elapsed: performance.now() - started };
-      },
-      ({ value }) => {
-        const expected = decision === "allow" ? "allow" : "block";
-        if (value.decision !== expected || (decision === "B3" && value.rule !== "B3")) {
-          throw new Error(`evaluate() did not return the expected ${decision} decision.`);
-        }
-      },
-    );
-    // This timing intentionally excludes process startup, adapters, and JSON I/O.
-    evaluatorRows.push([
-      decision,
-      formatMs(result.median),
-      formatMs(result.p90),
-    ]);
+  for (const [build, evaluate] of Object.entries(EVALUATORS)) {
+    for (const [decision, command] of [["allow", ALLOW_COMMAND], ["B3", BLOCK_COMMAND]]) {
+      const input = {
+        command,
+        cwd: temporaryRoot,
+        projectRoot: temporaryRoot,
+        env: {},
+      };
+      const result = sample(
+        `${build} evaluate() ${decision}`,
+        () => {
+          const started = performance.now();
+          const value = evaluate(input);
+          return { value, elapsed: performance.now() - started };
+        },
+        ({ value }) => {
+          const expected = decision === "allow" ? "allow" : "block";
+          if (value.decision !== expected || (decision === "B3" && value.rule !== "B3")) {
+            throw new Error(`${build} evaluate() did not return the expected ${decision} decision.`);
+          }
+        },
+      );
+      // This timing intentionally excludes process startup, adapters, and JSON I/O.
+      evaluatorRows.push([
+        build,
+        decision,
+        formatMs(result.median),
+        formatMs(result.p90),
+      ]);
+    }
   }
 
   const cpu = os.cpus()[0]?.model ?? "unknown";
@@ -269,15 +272,15 @@ try {
   process.stdout.write(`OS: ${os.type()} ${os.release()} (${process.platform}, ${os.arch()})\n`);
   process.stdout.write(`CPU: ${cpu} (${logicalProcessors} logical processors)\n`);
   process.stdout.write(`Node: ${process.version}\n`);
-  process.stdout.write("Implementation used by generated hooks and evaluate(): dist\n");
+  process.stdout.write("Generated hook command: run exactly as configured (dist entry)\n");
   process.stdout.write(`Samples per row: ${WARM_UP_RUNS} warm-up + ${MEASURED_RUNS} measured; percentiles use linear interpolation.\n\n`);
 
   process.stdout.write("Node startup floor\n");
   printTable(["Command", "Median (ms)", "P90 (ms)"], [[floor.label, formatMs(floor.median), formatMs(floor.p90)]]);
   process.stdout.write("\nConfigured hook command latency\n");
-  printTable(["Agent", "Event", "Generated command", "Median (ms)", "P90 (ms)"], hookRows);
+  printTable(["Agent", "Event", "Median (ms)", "P90 (ms)"], hookRows);
   process.stdout.write("\nIn-process evaluate() latency\n");
-  printTable(["Event", "Median (ms)", "P90 (ms)"], evaluatorRows);
+  printTable(["Build", "Event", "Median (ms)", "P90 (ms)"], evaluatorRows);
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });
 }

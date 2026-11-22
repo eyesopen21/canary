@@ -191,6 +191,26 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | CAN-N-05 | The hook SHOULD answer in under 100 ms per command on a typical laptop. This is an initial target; a restricted Windows benchmark recorded a 535 ms median from the source checkout and 192 ms for the packaged JavaScript entry point. Starting an empty Node process took a 119 ms median in the same environment. | Benchmark; current measurement is not a cross-platform result |
 | CAN-N-06 | `canary scan` SHOULD finish in under 10 s on a repository of 5,000 tracked files. A measured run completed in 9.47 s after optimization; repeatable cross-platform measurement is outstanding. | Benchmark; current measurement is not a cross-platform result |
 
+Benchmark run on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD Ryzen 5 7535HS with Radeon Graphics (12 logical processors), Node v22.22.2. The harness used 5 warm-ups and 50 measured samples per row; values are median/p90 milliseconds. Generated hooks ran the configured `dist` entry. These are measurements from one local environment, not cross-platform results.
+
+| Measurement | Event | Median (ms) | P90 (ms) |
+| --- | --- | ---: | ---: |
+| `node -e ""` startup floor | — | 1177.66 | 1868.79 |
+| Claude Code configured hook | allow | 1598.26 | 3213.51 |
+| Claude Code configured hook | B3 block | 892.12 | 1134.44 |
+| Codex configured hook | allow | 672.81 | 1720.79 |
+| Codex configured hook | B3 block | 2882.19 | 4247.03 |
+| Cursor configured hook | allow | 2435.35 | 3627.15 |
+| Cursor configured hook | B3 block | 2167.03 | 3195.73 |
+| Gemini CLI configured hook | allow | 1158.28 | 1846.72 |
+| Gemini CLI configured hook | B3 block | 494.17 | 612.76 |
+| OpenCode configured hook | allow | 374.14 | 449.92 |
+| OpenCode configured hook | B3 block | 608.50 | 1874.08 |
+| Source `evaluate()` | allow | 0.05 | 0.11 |
+| Source `evaluate()` | B3 block | 0.06 | 0.18 |
+| Built `evaluate()` | allow | 0.03 | 0.07 |
+| Built `evaluate()` | B3 block | 0.06 | 0.24 |
+
 ### 3.5 Logical data: `findings.json`
 
 `canary/findings.json` MUST follow this shape. Fields are illustrative; values are placeholders.

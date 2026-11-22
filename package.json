@@ -8,7 +8,7 @@
   "scripts": {
     "test": "npm run build && node --test \"tests/*.test.ts\"",
     "build": "node --disable-warning=ExperimentalWarning scripts/build.mjs",
-    "bench": "npm run build && node scripts/bench-hook.mjs && node scripts/bench-mcp-tool.mjs",
+    "bench": "npm run build && node scripts/bench-hook.mjs",
     "prepare": "npm run build"
   },
   "bin": {
