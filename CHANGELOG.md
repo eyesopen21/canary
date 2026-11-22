@@ -36,6 +36,7 @@ The npm package is not published. This section records repository changes; it do
 - Documented the Codex shell-string launch cost [S8] and the Cursor Windows/PowerShell shell layer [S9] in the adapter specification and its paired OpenSpec capability; no hook configuration changed.
 - CAN-N-05 now targets the in-process `evaluate()` path (p50 below 10 ms), with wall-clock hook latency and the Node startup floor still published separately in every benchmark. See [ADR-0009](docs/decisions/0009-split-performance-target.md) and the resolution of Q20.
 - Recorded the primary-source check for Q25: the Claude Code, Codex, and Gemini CLI installer pages document no install-time build, and Gemini CLI copies the extension on install. ADR-0007, the paired adapter specifications, and `docs/sources.md` now record the verified usages. Live install behavior remains unverified.
+- Recorded real live AC-4 observations in the runbook results table and README status rows: Cursor passed with Canary's decision shown for both commands; Codex executed a force push and is unsupported; OpenCode's observed blocks were not attributable to Canary and are inconclusive. Claude Code (5-hour usage limit) and Gemini CLI (not installed) remain Unverified. AC-4 stays open.
 
 ### Performance experiments (not kept)
 

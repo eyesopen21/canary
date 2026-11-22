@@ -7,10 +7,10 @@ The repository contains a working local CLI and adapters for Claude Code, Codex,
 | Agent | Live AC-4 result |
 | --- | --- |
 | Claude Code | **Unverified** |
-| Codex | **Unverified** |
-| Cursor | **Unverified** |
+| Codex | **Unsupported** (live 2026-11-22: force push executed; see [runbook](docs/testing/live-agent-checks.md#results)) |
+| Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
 | Gemini CLI | **Unverified** |
-| OpenCode | **Unverified** |
+| OpenCode | **Inconclusive** (live 2026-11-22: blocks not attributable to Canary; see [runbook](docs/testing/live-agent-checks.md#results)) |
 
 Do not change a status until a human has completed and recorded that agent's run in [the live-agent runbook](docs/testing/live-agent-checks.md). See also [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
 
