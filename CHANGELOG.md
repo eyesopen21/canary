@@ -44,7 +44,7 @@ The npm package is not published. This section records repository changes; it do
 - Added `tests/mcp-contract.test.ts` (26 synthetic cases) for the opt-in MCP prototype: first call, malformed input/JSON-RPC, ADR-0003 sanitization, unavailable tool, and disconnect. Primary-source review found a protocol-semantics gap versus MCP 2026-07-28 (Q26 remained open) and confirmed Q22's secret-capable `command` input is unsolved. Recommendation: keep ADR-0008 `proposed` [S1][S5][S6][S7][S8].
 - Added `docs/testing/ac4-handoff.md` with the exact per-agent setup, mode, verification and attribution steps; classified A1–A9 by evidence and remaining human action.
 - Reconciled spec wording: Gemini loads `hooks/hooks.json` by extension convention (not via `gemini-extension.json`) [S12], and `canary init` writes an absolute Cursor bundle path while the checked-in example is relative.
-- The six-cell CI matrix (Ubuntu/macOS/Windows × Node 22.22.0/latest) is authored with pinned action SHAs and benchmark artifacts, but no hosted run has been recorded. Executing it requires a new push authorization; it remains pending.
+- The six-cell CI matrix (Ubuntu/macOS/Windows × Node 22.22.0/latest) ran green on 2026-11-22, run `45076233582`, with one `benchmark-numbers-*` artifact per cell. Two earlier runs exposed real cross-platform failures: C3 link containment used non-canonical paths (macOS `/var` vs `/private/var`, and relative temp paths on Ubuntu), and the hook's direct-launch guard rejected a bundle launched through a symlinked directory (macOS archive test). Both are fixed; an annotation about deprecated Node 20 actions remains informational.
 
 ### Performance experiments (not kept)
 

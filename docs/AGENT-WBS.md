@@ -5,7 +5,7 @@
 | Version | 0.1 |
 | Date | 2026-11-22 |
 | Scope | MVP (P0) plus a P1/P2 backlog |
-| Status | Local P0 implementation and acceptance tests are in place. Live-agent checks and hosted matrix results are pending. |
+| Status | Local P0 implementation and acceptance tests are in place. The hosted CI matrix ran green on 2026-11-22 (run `45076233582`); four of five live-agent checks remain pending or failed. |
 
 This document turns the existing documentation into agent-sized work packages. It does not add requirements: every item traces to an ID in a source document.
 
