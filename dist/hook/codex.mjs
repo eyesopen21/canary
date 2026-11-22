@@ -844,6 +844,24 @@ const __factories = {
       return null;
     }
     
+    /**
+     * D3 cheap pre-gate for the B1 path. `checkDeleteTarget` is the only place in
+     * the evaluator that performs filesystem calls (realpath, via `realPathOrSelf`),
+     * so a segment that cannot be a recursive delete must not enter that path.
+     *
+     * The predicate is deliberately a superset of the commands B1 recognizes:
+     * `tokenize`/`unquote`/`commandName` only drop quotes, backslashes and a
+     * leading path, so stripping those characters from the raw segment leaves any
+     * B1 command name intact. False positives merely send a segment through the
+     * existing exact classifier (which then rejects it); false negatives are not
+     * possible, so no command that currently blocks can become allowed.
+     */
+    const B1_COMMAND_WORDS = /\b(?:rm|rimraf|remove-item|ri|del|rmdir|rd|find)\b/i;
+    
+    function mayBeRecursiveDelete(segment        )          {
+      return B1_COMMAND_WORDS.test(segment.replace(/['"\\]/g, ""));
+    }
+    
     function classifyRecursiveDelete(
       tokens          ,
       context                       ,
@@ -1070,7 +1088,7 @@ const __factories = {
       if (tokens.length === 0) return [];
     
       const matches              = [];
-      const b1 = classifyRecursiveDelete(tokens, context);
+      const b1 = mayBeRecursiveDelete(segment) ? classifyRecursiveDelete(tokens, context) : null;
       if (b1) matches.push(b1);
       const b2 = classifyDatabase(tokens, context);
       if (b2) matches.push(b2);
@@ -1080,7 +1098,7 @@ const __factories = {
       return matches;
     }
     
-    Object.assign(__exports, { classifySegment });
+    Object.assign(__exports, { mayBeRecursiveDelete, classifySegment });
   },
   "core/host.js": (__exports, __require) => {
     /** B2 host resolution. Values are parsed in memory and never returned. */
