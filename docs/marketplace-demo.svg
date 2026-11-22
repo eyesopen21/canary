@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="title desc" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace">
   <title id="title">Canary sanitized local demo</title>
   <desc id="desc">Summary of a guarded local crash test and synthetic fixture scans.</desc>
   <rect width="760" height="340" rx="16" fill="#101820"/>
@@ -8,7 +8,7 @@
   <path d="M20 44h720" stroke="#2c3d49"/>
   <text x="28" y="62" fill="#94c5e6" font-size="13" font-weight="700">CANARY / LOCAL SAFETY PREVIEW</text>
   <text x="28" y="98" fill="#f4f7f9" font-size="21" font-weight="700">Guarded crash test</text>
-  <text x="28" y="126" fill="#b6c3cd" font-size="14" font-weight="400">1 contained demo operations · 3 Canary block decisions · 2 simulations</text>
+  <text x="28" y="126" fill="#b6c3cd" font-size="14" font-weight="400">1 contained demo operation · 3 Canary block decisions · 2 simulations</text>
   <text x="28" y="169" fill="#f4f7f9" font-size="18" font-weight="700">Synthetic fixture scans</text>
   <text x="28" y="202" fill="#b6c3cd" font-size="14" font-weight="400">clean  ·  score 100/100  ·  0 findings</text>
   <text x="28" y="231" fill="#b6c3cd" font-size="14" font-weight="400">trap   ·  score 25/100  ·  3 findings</text>

@@ -25,9 +25,10 @@ function escapeXml(value) {
     .replaceAll("'", "&apos;");
 }
 
-function runCanary(args, cwd) {
+function runCanary(args, cwd, env = {}) {
   const result = spawnSync(process.execPath, [path.join(ROOT, "bin", "canary.js"), ...args], {
     cwd,
+    env: { ...process.env, ...env },
     encoding: "utf8",
     timeout: 30_000,
     maxBuffer: MAX_BUFFER,
@@ -48,7 +49,6 @@ function readCrashSummary(text) {
     throw new Error("Canary returned an unexpected crash-test summary.");
   }
   return {
-    scenarios: withCanary.length,
     realRuns: without.filter((label) => label === "real run").length,
     prevented: withCanary.filter((label) => label === "prevented").length,
     simulated: without.filter((label) => label === "simulation").length,
@@ -76,19 +76,24 @@ function textElement(x, y, value, color = "#d8e2ea", size = 15, weight = 400) {
   return `<text x="${x}" y="${y}" fill="${color}" font-size="${size}" font-weight="${weight}">${escapeXml(value)}</text>`;
 }
 
+function plural(count, singular) {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+}
+
 function makeSvg(crash, scans) {
+  const crashLine = `${crash.realRuns} contained demo ${crash.realRuns === 1 ? "operation" : "operations"} · ${plural(crash.prevented, "Canary block decision")} · ${plural(crash.simulated, "simulation")}`;
   const rows = [
     textElement(28, 62, "CANARY / LOCAL SAFETY PREVIEW", "#94c5e6", 13, 700),
     textElement(28, 98, "Guarded crash test", "#f4f7f9", 21, 700),
-    textElement(28, 126, `${crash.realRuns} contained demo operations · ${crash.prevented} Canary block decisions · ${crash.simulated} simulations`, "#b6c3cd", 14),
+    textElement(28, 126, crashLine, "#b6c3cd", 14),
     textElement(28, 169, "Synthetic fixture scans", "#f4f7f9", 18, 700),
-    textElement(28, 202, `clean  ·  score ${scans.clean.score}/100  ·  ${scans.clean.findings} findings`, "#b6c3cd", 14),
-    textElement(28, 231, `trap   ·  score ${scans["trap-c1"].score}/100  ·  ${scans["trap-c1"].findings} findings`, "#b6c3cd", 14),
+    textElement(28, 202, `clean  ·  score ${scans.clean.score}/100  ·  ${plural(scans.clean.findings, "finding")}`, "#b6c3cd", 14),
+    textElement(28, 231, `trap   ·  score ${scans["trap-c1"].score}/100  ·  ${plural(scans["trap-c1"].findings, "finding")}`, "#b6c3cd", 14),
     textElement(28, 278, "Temp-only fixtures · no network · no credentials or command transcript", "#7fe0b0", 12, 600),
     textElement(28, 311, "Generated from local Canary output; sensitive details are omitted.", "#71808b", 11),
   ].join("\n  ");
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="title desc" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace">
   <title id="title">Canary sanitized local demo</title>
   <desc id="desc">Summary of a guarded local crash test and synthetic fixture scans.</desc>
   <rect width="760" height="340" rx="16" fill="#101820"/>
@@ -131,9 +136,11 @@ async function main() {
       const canonicalSource = await realpath(source);
       if (!isInside(ROOT, canonicalSource)) throw new Error("Fixture source guard failed.");
       const target = path.join(temp.root, "fixtures", fixture);
+      const scanHome = path.join(temp.root, "scan-home", fixture);
       await mkdir(path.dirname(target), { recursive: true });
       await cp(canonicalSource, target, { recursive: true, errorOnExist: true, force: false });
-      const output = runCanary(["scan", "--json"], target);
+      await mkdir(scanHome, { recursive: true });
+      const output = runCanary(["scan", "--json"], target, { CANARY_HOME: scanHome });
       scans[fixture] = readScanSummary(output);
     }
     result = { crash, scans };

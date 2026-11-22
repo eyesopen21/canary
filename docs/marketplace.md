@@ -6,7 +6,7 @@ Local guardrails for risky coding-agent shell actions.
 
 ## Description (under 500 characters)
 
-Canary scans a repository for selected agent-related risks and adds a project hook that blocks a small set of destructive shell commands, including unresolved recursive deletes and force pushes. It runs locally, does not inspect cloud accounts, and is not a security boundary. Hooks can be bypassed, may fail open, and require review in each agent before trust.
+Canary scans a repository for selected agent-related risks and adds a project hook that blocks a small set of destructive shell commands, including unresolved recursive deletes and force pushes. It runs locally, does not inspect cloud accounts, and is not a security boundary. Only Cursor is live-verified; [other adapters' live statuses are in the runbook](testing/live-agent-checks.md). Hooks can be bypassed, may fail open, and require review in each agent before trust.
 
 ## Technology
 
