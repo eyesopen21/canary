@@ -2,6 +2,8 @@
 
 Canary scans a repository for selected agent-related risks and provides a command hook that blocks a small set of destructive shell commands. It is a local guardrail, not a security boundary.
 
+![Sanitized local crash-test and fixture-scan preview](docs/marketplace-demo.svg)
+
 The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. One live AC-4 pass is recorded (Cursor); Codex and OpenCode failed live checks and are listed as unsupported, Claude Code is inconclusive, and Gemini CLI remains unavailable pending setup:
 
 | Agent | Live AC-4 result |
