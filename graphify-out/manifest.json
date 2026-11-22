@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795381290.7718089,
-    "seen": 1795381526.737632,
-    "ast_hash": "803b724f73a5f744466886174aeaaac8",
+    "mtime": 1795383868.3463056,
+    "seen": 1795384639.257051,
+    "ast_hash": "1610cf8a631305f4a6b0559625876870",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795378867.5627406,
-    "seen": 1795379492.7785046,
-    "ast_hash": "0545c2936cae01143098864950885abd",
+    "mtime": 1795384345.9483697,
+    "seen": 1795384639.257067,
+    "ast_hash": "e5f61f271022934cd92314f5074591c9",
     "semantic_hash": ""
   },
   "SECURITY.md": {
@@ -600,21 +600,21 @@
     "semantic_hash": ""
   },
   "docs/open-questions.md": {
-    "mtime": 1795381266.256213,
-    "seen": 1795381526.7377164,
-    "ast_hash": "75b4c661c379d360539702bbf03bc1b7",
+    "mtime": 1795383868.361432,
+    "seen": 1795384639.2571461,
+    "ast_hash": "de25f8d7d3eb39f89bf97843e55afd2a",
     "semantic_hash": ""
   },
   "docs/sources.md": {
-    "mtime": 1795380974.317496,
-    "seen": 1795381526.7377205,
-    "ast_hash": "ac02e22e2167a46432fcacbed005e304",
+    "mtime": 1795382318.432604,
+    "seen": 1795384639.257151,
+    "ast_hash": "e47a70f5de12ecebef4d9ef611ccde53",
     "semantic_hash": ""
   },
   "docs/specs/agent-adapters.md": {
-    "mtime": 1795379391.148929,
-    "seen": 1795379492.7785923,
-    "ast_hash": "10d321f18ec818ccf2ca62a402628a68",
+    "mtime": 1795382342.6051133,
+    "seen": 1795384639.2571561,
+    "ast_hash": "45aea066ceadcc208a56a36e3f94d97d",
     "semantic_hash": ""
   },
   "docs/specs/policy.md": {
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/agent-adapters/spec.md": {
-    "mtime": 1795378552.796942,
-    "seen": 1795379492.778659,
-    "ast_hash": "7bbaf55a7e81522ff5ce8ca4d0e0230e",
+    "mtime": 1795382332.4190729,
+    "seen": 1795384639.257233,
+    "ast_hash": "b05b1a00e9496c0be8aa621112ac6285",
     "semantic_hash": ""
   },
   "openspec/specs/hook-policy/spec.md": {
@@ -774,21 +774,21 @@
     "semantic_hash": ""
   },
   "docs/decisions/0007-commit-built-javascript-for-marketplace-installs.md": {
-    "mtime": 1795377631.6632657,
-    "seen": 1795377929.2534523,
-    "ast_hash": "3fde30e0cc86f14e25e0294cb7777a5b",
+    "mtime": 1795382318.4252737,
+    "seen": 1795384639.2571251,
+    "ast_hash": "da9631ee89775d171149daea1b1ed4ef",
     "semantic_hash": ""
   },
   "docs/decisions/0008-mcp-tool-hooks.md": {
-    "mtime": 1795379747.5764558,
-    "seen": 1795381526.7377024,
-    "ast_hash": "9e07c12435f4931cc97a0db335e8513c",
+    "mtime": 1795382563.3608024,
+    "seen": 1795384639.2571294,
+    "ast_hash": "a3ecfcd2160feb0c9dfab43533ca2e07",
     "semantic_hash": ""
   },
   "docs/testing/live-agent-checks.md": {
-    "mtime": 1795379397.7759838,
-    "seen": 1795379492.7786033,
-    "ast_hash": "0e3d244ec8ac221849655b9f24763f4f",
+    "mtime": 1795384367.6356046,
+    "seen": 1795384639.2571726,
+    "ast_hash": "f4029edc1b0f0e164230e4359edd94ee",
     "semantic_hash": ""
   },
   "assets/banners/canary-germanico-banner-1508x158.png": {
@@ -843,6 +843,24 @@
     "mtime": 1795381277.3730328,
     "seen": 1795381526.7377074,
     "ast_hash": "c3fbc075a9fa7598ef0e946c55dcac91",
+    "semantic_hash": ""
+  },
+  "tests/d3-regression.test.ts": {
+    "mtime": 1795382283.4797368,
+    "seen": 1795384639.2569702,
+    "ast_hash": "f0313000273b29868d8e3dca8cc9d0e5",
+    "semantic_hash": ""
+  },
+  "tests/mcp-contract.test.ts": {
+    "mtime": 1795382563.365444,
+    "seen": 1795384639.25699,
+    "ast_hash": "fd784aca42438de41e2e6ee16459d1f3",
+    "semantic_hash": ""
+  },
+  "docs/testing/ac4-handoff.md": {
+    "mtime": 1795382350.4416895,
+    "seen": 1795384639.2571669,
+    "ast_hash": "1dbdbe6b3fd8a8d5a9f065588af4f085",
     "semantic_hash": ""
   }
 }

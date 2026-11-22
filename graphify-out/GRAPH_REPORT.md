@@ -1,17 +1,17 @@
 # Graph Report - canary  (2026-11-22)
 
 ## Corpus Check
-- 135 files · ~90,966 words
+- 138 files · ~96,726 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: (none) 12, .mdc 2, .example 2)
 
 ## Summary
-- 1226 nodes · 2133 edges · 75 communities (58 shown, 17 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 34 edges (avg confidence: 0.89)
+- 1258 nodes · 2179 edges · 78 communities (60 shown, 18 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 37 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9b038241`
+- Built from commit: `9aed51f9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,7 +21,7 @@
 - adapters/index.ts
 - SRS.md
 - findings.ts
-- ci.ts
+- server.ts
 - database.ts
 - Canary — Software Requirements Specification
 - agent-config.ts
@@ -43,7 +43,7 @@
 - The crash test runs only in an isolated, disposable environment
 - One shared core with a thin adapter per agent
 - issue-readonly.yml
-- policy.test.ts
+- split.ts
 - pr-target.yml
 - push-agent.yml
 - respond
@@ -71,7 +71,9 @@
 - 1. What are we working on?
 - 1. Introduction
 - 3.1 External interfaces
+- mcp-contract.test.ts
 - cli.test.ts
+- AC-4 human readiness handoff
 - bench-hook.mjs
 - live-check-setup.mjs
 - Run Claude Code and Codex hooks through a stdio MCP server
@@ -83,61 +85,62 @@
 - build.mjs
 - packaging.test.ts
 - 3. Specific requirements (P0)
+- ref_node_path
 - Agent adapters
 - ref_node_child_process
 
 ## God Nodes (most connected - your core abstractions)
-1. `unquote()` - 20 edges
-2. `evaluate()` - 19 edges
+1. `evaluate()` - 21 edges
+2. `unquote()` - 20 edges
 3. `Requirements` - 15 edges
 4. `EvaluationResult` - 14 edges
 5. `RuleId` - 13 edges
-6. `getMessage()` - 13 edges
-7. `initAgent()` - 13 edges
-8. `createHookEvaluator()` - 13 edges
+6. `initAgent()` - 13 edges
+7. `createHookEvaluator()` - 13 edges
+8. `getMessage()` - 13 edges
 9. `checkCredentials()` - 13 edges
 10. `checkDatabase()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `3.1.2 Agent hook interfaces` --references--> `user_email()`  [INFERRED]
-  docs/SRS.md → tests/adapters.test.ts
-- `3.4 Performance requirements` --references--> `evaluate()`  [INFERRED]
-  docs/SRS.md → src/core/evaluate.ts
-- `Wave 1 — Independent implementation (parallelizable)` --references--> `Evaluator`  [INFERRED]
-  docs/AGENT-WBS.md → src/contract.ts
 - `Changed` --references--> `evaluate()`  [INFERRED]
   CHANGELOG.md → src/core/evaluate.ts
-- `3.7 Software system attributes` --references--> `user_email()`  [INFERRED]
-  docs/SRS.md → tests/adapters.test.ts
+- `Open questions about the product` --references--> `evaluate()`  [INFERRED]
+  docs/open-questions.md → src/core/evaluate.ts
+- `Resolved` --references--> `evaluate()`  [INFERRED]
+  docs/open-questions.md → src/core/evaluate.ts
+- `Wave 1 — Independent implementation (parallelizable)` --references--> `Evaluator`  [INFERRED]
+  docs/AGENT-WBS.md → src/contract.ts
+- `Considered Options` --references--> `evaluate()`  [INFERRED]
+  docs/decisions/0009-split-performance-target.md → src/core/evaluate.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (75 total, 17 thin omitted)
+## Communities (78 total, 18 thin omitted)
 
 ### Community 0 - "crash-test/index.ts"
 Cohesion: 0.06
-Nodes (65): Decision, RuleMatch, assertStrictlyInside(), buildMinimalEnv(), canonicalTmpRoot(), cleanupRoot(), createSandboxRoot(), GuardContext (+57 more)
+Nodes (63): assertStrictlyInside(), buildMinimalEnv(), canonicalTmpRoot(), cleanupRoot(), createSandboxRoot(), GuardContext, GuardError, guardPath() (+55 more)
 
 ### Community 1 - "rules.ts"
-Cohesion: 0.12
-Nodes (39): composeServices(), envFileValues(), findHostSource(), HOST_VARIABLES, HostSource, isLocalHost(), parseAssignment(), parseHost() (+31 more)
+Cohesion: 0.11
+Nodes (41): Decision, composeServices(), envFileValues(), findHostSource(), HOST_VARIABLES, HostSource, isLocalHost(), parseAssignment() (+33 more)
 
 ### Community 2 - "adapters/index.ts"
 Cohesion: 0.06
-Nodes (82): ClaudeCodeAdapter, ClaudeCodeEvent, createClaudeCodeAdapter(), ADR-0005, CodexAdapter, CodexEvent, createCodexAdapter(), ADR-0005 (+74 more)
+Nodes (85): ClaudeCodeAdapter, ClaudeCodeEvent, createClaudeCodeAdapter(), ADR-0005, CodexAdapter, CodexEvent, createCodexAdapter(), ADR-0005 (+77 more)
 
 ### Community 3 - "SRS.md"
-Cohesion: 0.08
-Nodes (28): Agent instructions, Layout, Operational boundaries, Rules, Start here, Workflow, Claude Code entry point, graphify (+20 more)
+Cohesion: 0.06
+Nodes (42): Agent instructions, Layout, Operational boundaries, Rules, Start here, Workflow, Added, Changed (+34 more)
 
 ### Community 4 - "findings.ts"
-Cohesion: 0.07
-Nodes (56): AgentName, AGENTS, main(), parseAgent(), parseInit(), USAGE, UsageError, appendProjectLog() (+48 more)
+Cohesion: 0.08
+Nodes (49): appendProjectLog(), outputFile(), readProjectFindings(), statIfPresent(), writeOutput(), writeProjectReport(), badge(), checks (+41 more)
 
-### Community 5 - "ci.ts"
-Cohesion: 0.12
-Nodes (22): ciCheck, CiCheckOptions, createCiCheck(), DEFAULT_AGENT_ACTIONS, finding(), headCheckoutLine(), indentOf(), Line (+14 more)
+### Community 5 - "server.ts"
+Cohesion: 0.10
+Nodes (28): Assumptions, Classification of assumptions (2026-11-22), Inputs confirmed by the maintainer (2026-11-22), Notes on inputs not used, Open question about the live-check setup, Open questions about the agents, Open questions about the product, Open questions and assumptions (+20 more)
 
 ### Community 6 - "database.ts"
 Cohesion: 0.08
@@ -148,8 +151,8 @@ Cohesion: 0.18
 Nodes (11): 2. References, 4.1 Verification methods, 4.2 MVP acceptance criteria, 4. Verification and acceptance, 5. Roadmap requirements (P1 and P2), 6. Traceability, Appendix A. Assumptions and dependencies, Appendix B. The 11 audit checks (+3 more)
 
 ### Community 8 - "agent-config.ts"
-Cohesion: 0.10
-Nodes (37): agentConfigCheck(), analyzeBypass(), analyzeMcpJson(), analyzeMcpLines(), analyzeMcpToml(), analyzeUnicode(), BIDI, BYPASS_RULES (+29 more)
+Cohesion: 0.05
+Nodes (59): agentConfigCheck(), analyzeBypass(), analyzeMcpJson(), analyzeMcpLines(), analyzeMcpToml(), analyzeUnicode(), BIDI, BYPASS_RULES (+51 more)
 
 ### Community 9 - "ADDED Requirements"
 Cohesion: 0.06
@@ -169,7 +172,7 @@ Nodes (31): ADDED Requirements, Purpose, Requirement: Claude Code adapter output
 
 ### Community 13 - "Requirements"
 Cohesion: 0.05
-Nodes (41): agent-adapters Specification, Note: proposed MCP tool prototype (informational), Purpose, Requirement: Built JavaScript hook runtime and per-agent bundles, Requirement: Claude Code adapter output, Requirement: Codex adapter output, Requirement: Cursor adapter output, Requirement: Documented Codex shell launch cost (+33 more)
+Nodes (42): agent-adapters Specification, Note: proposed MCP tool prototype (informational), Purpose, Requirement: Built JavaScript hook runtime and per-agent bundles, Requirement: Claude Code adapter output, Requirement: Codex adapter output, Requirement: Cursor adapter output, Requirement: Documented Codex shell launch cost (+34 more)
 
 ### Community 14 - "Hook policy"
 Cohesion: 0.10
@@ -223,9 +226,9 @@ Nodes (12): Confirmation, Consequences, Considered Options, Context and Problem 
 Cohesion: 0.17
 Nodes (11): jobs, respond, name, on, issue_comment, permissions, contents, issues (+3 more)
 
-### Community 27 - "policy.test.ts"
-Cohesion: 0.05
-Nodes (50): Added, Changed, Changelog, Fixed, Performance experiments (not kept), [Unreleased], Confirmation, Consequences (+42 more)
+### Community 27 - "split.ts"
+Cohesion: 0.26
+Nodes (11): Context, escapeRegExp(), extractNestedShells(), isSeparator(), isWordChar(), ParenContext, Quote, readQuoted() (+3 more)
 
 ### Community 28 - "pr-target.yml"
 Cohesion: 0.18
@@ -295,9 +298,17 @@ Nodes (7): 1.1 Purpose, 1.2 Scope, 1.3 Product perspective, 1.4 Product function
 Cohesion: 0.50
 Nodes (4): 3.1.1 Command-line interface, 3.1.2 Agent hook interfaces, 3.1.3 Files Canary writes, 3.1 External interfaces
 
+### Community 61 - "mcp-contract.test.ts"
+Cohesion: 0.12
+Nodes (7): ADR-0003, BIN, JsonRpcMessage, ROOT, Session, startServer(), Waiter
+
 ### Community 62 - "cli.test.ts"
 Cohesion: 0.13
 Nodes (14): Agent, AGENTS, assertInitialized(), cli, dirnameOf(), fixtures, freshDirectory(), initTargets (+6 more)
+
+### Community 63 - "AC-4 human readiness handoff"
+Cohesion: 0.20
+Nodes (9): AC-4 human readiness handoff, Attributing the block to Canary, Evidence fields to record (one set per agent and per mode), Exact lines to update when a row is completed, Per-agent handoff checklist — all Unverified, Setup smoke performed while preparing this handoff (not a live check), Shared prerequisites (one fresh sandbox per agent and per approval-free mode), The two commands to attempt (+1 more)
 
 ### Community 64 - "bench-hook.mjs"
 Cohesion: 0.13
@@ -328,16 +339,16 @@ Cohesion: 0.20
 Nodes (10): Cursor, 3.7 Software system attributes, T6. Canary leaks a secret, Requirement: Core and adapter boundary, Scenario: Adapter delegates the decision, Scenario: Cursor identity field is ignored, Requirement: Core and adapter boundary, Scenario: Adapter delegates the decision (+2 more)
 
 ### Community 71 - "Install, trust, review, prompt, and check by agent"
-Cohesion: 0.20
-Nodes (10): Claude Code — Q1 (`bypassPermissions`), Codex — Q2 (full-access / approval-free mode), Cursor — Q4 (auto-run mode), Gemini CLI — Q3 (`yolo`), Install, trust, review, prompt, and check by agent, Isolation and expected result, Live agent checks (AC-4), OpenCode (+2 more)
+Cohesion: 0.18
+Nodes (11): Claude Code — Q1 (`bypassPermissions`), Codex — Q2 (full-access / approval-free mode), Codex Q2 root cause (2026-11-22), Cursor — Q4 (auto-run mode), Gemini CLI — Q3 (`yolo`), Install, trust, review, prompt, and check by agent, Isolation and expected result, Live agent checks (AC-4) (+3 more)
 
 ### Community 72 - "build.mjs"
 Cohesion: 0.16
 Nodes (13): ADR-0006: Zero-dependency TypeScript on Node, Consequences, Context, Decision, agents, build(), distRoot, hooksTarget (+5 more)
 
 ### Community 73 - "packaging.test.ts"
-Cohesion: 0.24
-Nodes (7): JSON_FILES, PACKAGING_FILES, parseJson(), parseJsonc(), read(), root, stripJsonComments()
+Cohesion: 0.18
+Nodes (9): check(), OUTSIDE_COMMANDS, JSON_FILES, PACKAGING_FILES, parseJson(), parseJsonc(), read(), root (+1 more)
 
 ### Community 74 - "3. Specific requirements (P0)"
 Cohesion: 0.22
@@ -348,24 +359,24 @@ Cohesion: 0.22
 Nodes (9): Agent adapters, Built JavaScript runtime, Claude Code, Codex, Gemini CLI, OpenCode, Opt-in MCP tool prototype (proposed, not the default), Shared rules for all adapters (+1 more)
 
 ## Knowledge Gaps
-- **17 isolated node(s):** `ADR-0004`, `ADR-0004`, `ADR-0004`, `ADR-0004`, `ADR-0004` (+12 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 586 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **18 isolated node(s):** `ADR-0003`, `ADR-0004`, `ADR-0004`, `ADR-0004`, `ADR-0004` (+13 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 609 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `evaluate()` connect `policy.test.ts` to `crash-test/index.ts`, `rules.ts`, `3. Specific requirements (P0)`, `adapters/index.ts`?**
-  _High betweenness centrality (0.190) - this node is a cross-community bridge._
-- **Are the 2 inferred relationships involving `unquote()` (e.g. with `classifyInfrastructure()` and `migrationEffect()`) actually correct?**
-  _`unquote()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `ADR-0004`, `ADR-0004`, `ADR-0004` to the rest of the system?**
-  _17 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `crash-test/index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06070175438596491 - nodes in this community are weakly interconnected._
-- **Why does `user_email()` connect `user_email` to `adapters/index.ts`, `3.1 External interfaces`?**
-  _High betweenness centrality (0.119) - this node is a cross-community bridge._
+- **Why does `evaluate()` connect `adapters/index.ts` to `crash-test/index.ts`, `rules.ts`, `SRS.md`, `server.ts`, `packaging.test.ts`, `3. Specific requirements (P0)`, `split.ts`?**
+  _High betweenness centrality (0.174) - this node is a cross-community bridge._
 - **Are the 6 inferred relationships involving `evaluate()` (e.g. with `Changed` and `Considered Options`) actually correct?**
   _`evaluate()` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `ADR-0003`, `ADR-0004`, `ADR-0004` to the rest of the system?**
+  _18 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `crash-test/index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.06293965198074787 - nodes in this community are weakly interconnected._
+- **Why does `user_email()` connect `user_email` to `adapters/index.ts`, `3.1 External interfaces`?**
+  _High betweenness centrality (0.146) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `unquote()` (e.g. with `classifyInfrastructure()` and `migrationEffect()`) actually correct?**
+  _`unquote()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Should `rules.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.11960132890365449 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11212121212121212 - nodes in this community are weakly interconnected._
