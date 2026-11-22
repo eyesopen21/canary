@@ -341,6 +341,7 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assert.match(config, /existing-CANARY_SYNTHETIC_MARKER_7f3a/);
       assert.match(config, /"resource"\s*:\s*"\*"/);
       assert.match(config, /"resource"\s*:\s*"git push --force \*"/);
+      assert.match(config, /"effect"\s*:\s*"deny"/);
       assert.match(config, /keep this comment/);
       const withoutJsonc = config.replace(/\/\/[^\n]*/g, "").replace(/,(?=\s*[}\]])/g, "");
       const parsed = JSON.parse(withoutJsonc);
@@ -348,9 +349,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assert.match(output, /fail-closed behaviour is unverified/);
       assert.doesNotMatch(output, new RegExp(marker));
       const plugin = readFileSync(join(dirnameOf(configPath), ".opencode", "plugins", "canary", "index.ts"), "utf8");
-      assert.match(plugin, /execFileSync\(process\.execPath/);
-      assert.match(plugin, /dist.*hook.*opencode\.mjs/);
-      const execArgs = plugin.match(/execFileSync\(process\.execPath,\s*(\[[^\]]+\])/);
+      assert.match(plugin, /execFileSync\("node",\s*\[[^\]]+\]/);
+      assert.doesNotMatch(plugin, /process\.execPath/);
+      const execArgs = plugin.match(/execFileSync\("node",\s*(\[[^\]]+\])/);
       assert.ok(execArgs, "generated OpenCode plugin must pass an argument array");
       assert.ok(isAbsolute(JSON.parse(execArgs[1])[0]), "OpenCode build path must be absolute");
       assert.doesNotMatch(plugin, /canary hook --agent opencode/);

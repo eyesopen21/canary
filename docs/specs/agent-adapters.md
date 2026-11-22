@@ -25,7 +25,7 @@ Every field name and event name below is copied from the cited documentation. Th
 
 ## Built JavaScript runtime
 
-The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`. Codex and Cursor keep a single shell `command` string: [S8] documents no `command` + `args` exec form for Codex, and Cursor's hook commands are run through a shell chosen by the desktop app [S9]. See the per-agent sections below for the resulting cost.
+The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. The OpenCode plugin calls `execFileSync("node", [absoluteBundlePath], ...)`. Node.js must be available on `PATH`; generated hooks do not invoke a `canary` command from `PATH`. Codex and Cursor keep a single shell `command` string: [S8] documents no `command` + `args` exec form for Codex, and Cursor's hook commands are run through a shell chosen by the desktop app [S9]. See the per-agent sections below for the resulting cost.
 
 Checked against the primary pages on 2026-11-22 (Q25): Claude Code and Codex define plugin manifests, hook files, and bundled paths but document no build-on-install step [S4][S8][S32]; Gemini CLI copies the extension during install and requires `gemini extensions update` to pull source changes [S12]. None of the three documents TypeScript compilation or a `dist/` build at install time. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
@@ -244,17 +244,17 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## OpenCode
 
-**Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds permission rules to `opencode.jsonc` [S13][S16]. The generated plugin starts Node in exec form with the absolute path to `dist/hook/opencode.mjs` and passes the synthetic permission event on stdin; it does not pass `hook --agent` arguments. The checked-in example under `.opencode/plugins/canary/` uses the same bundle through `execFileSync`.
+**Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds a force-push `deny` permission rule to `opencode.jsonc` [S13][S14][S16]. The generated plugin invokes the bundled `dist/hook/opencode.mjs` handler as a child `node` process, passes the V2 permission event on stdin, and does not pass `hook --agent` arguments. `node` must be available on `PATH` when OpenCode runs the plugin.
 
-The generated plugin calls the bundle with `execFileSync(process.execPath, [bundlePath], ...)`, passing the event on stdin, and applies a returned `ask` or `deny` decision to the V2 permission event. This keeps policy in the shared core and avoids a `canary` executable or Windows `.cmd` shim on `PATH`.
+The native `deny` rule remains a barrier for force pushes. It is final and bypasses `evaluate` [S14], so that denial is not a Canary decision. When the hook receives an event and the core blocks, the plugin sets `event.effect = "deny"` and the canonical policy message. A warning sets `ask`. The plugin never sets `allow`.
 
 - `evaluate` hooks run for `allow` and `ask` decisions; an explicit configured `deny` is final and does not invoke the hook [S14].
 - A hook may change `effect` to `allow`, `ask`, or `deny`, and `message` becomes the denial reason [S14].
 - Canary never sets `effect = "allow"`.
 
-**Barrier layer.** `init` adds rules such as `{ "action": "shell", "resource": "git push --force *", "effect": "deny" }` to `opencode.jsonc` [S16]. OpenCode's shell scanner applies these checks across Bash, Zsh, POSIX `sh`, and PowerShell [S16].
+**Permission handoff.** `init` adds `{ "action": "shell", "resource": "git push --force *", "effect": "deny" }` to `opencode.jsonc` as a native barrier [S14][S16]. For a disposable attribution test of Canary's own B3 decision, remove only that rule from the sandbox so the `evaluate` hook can receive the event; never count the native denial as a Canary decision. OpenCode's shell scanner applies permission checks across Bash, Zsh, POSIX `sh`, and PowerShell [S16].
 
-**Open points.** Whether `event.resources` holds the full command text for `shell` is not stated in [S14] and must be confirmed (Q5). The live plugin and its fail-closed behavior have not been verified; see Q19.
+**Open points.** [S16] documents shell resources as scanner-produced command text, but Canary has not yet captured a sanitized live `action` and resource count from OpenCode 2.3.2 (Q5). The live plugin decision and its behavior on plugin failure have not been verified; see Q19. The V2 `execute.before` hook is documented for inspecting or replacing tool input, and the V1 migration guide only maps it to the V2 hook [S14][S15]; Canary does not use it as a blocking hook because its veto behavior is not documented.
 
 ## Shared rules for all adapters
 

@@ -66,11 +66,11 @@ function generatedHook(root, agent) {
   }
 
   const plugin = readFileSync(path.join(root, ".opencode", "plugins", "canary", "index.ts"), "utf8");
-  const match = plugin.match(/execFileSync\(process\.execPath,\s*(\[[^\]]+\])/);
+  const match = plugin.match(/execFileSync\("node",\s*(\[[^\]]+\])/);
   if (!match) throw new Error("Generated OpenCode hook command was not found.");
   const args = JSON.parse(match[1]);
   return {
-    command: process.execPath,
+    command: "node",
     args,
   };
 }

@@ -12,7 +12,7 @@ The repository contains a working local CLI and adapters for Claude Code, Codex,
 | Codex | **Unsupported** (live 2026-11-22: an earlier force push executed because `codex exec --trust` did not trust the non-managed hook. A fresh sandbox rerun could not reach `/hooks` review or the test-only trust path because Codex could not initialize its local state database; neither check command ran. See [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
 | Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
 | Gemini CLI | **Unverified** (CLI not installed; AC-4 unverified; see the install and authentication workflow in the [runbook](docs/testing/live-agent-checks.md#gemini-cli--q3-yolo)) |
-| OpenCode | **Unsupported** (live 2026-11-22: sentinel delete executed with no Canary decision; force push denied by the generated `opencode.jsonc` rule, not Canary; see [runbook](docs/testing/live-agent-checks.md#results)) |
+| OpenCode | **Unsupported** (live 2026-11-22: sentinel delete executed with no Canary decision; force push denied by the generated `opencode.jsonc` rule, not Canary. An explicit-Node invocation fix is awaiting a complete live rerun; see [runbook](docs/testing/live-agent-checks.md#results)) |
 
 Do not change a status until a human has completed and recorded that agent's run in [the live-agent runbook](docs/testing/live-agent-checks.md). See also [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
 
