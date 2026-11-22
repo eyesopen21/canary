@@ -7,7 +7,7 @@ The repository contains a working local CLI and adapters for Claude Code, Codex,
 | Agent | Live AC-4 result |
 | --- | --- |
 | Claude Code | **Unverified** |
-| Codex | **Unsupported** (live 2026-11-22: force push executed; see [runbook](docs/testing/live-agent-checks.md#results)) |
+| Codex | **Unsupported** (live 2026-11-22: force push executed because `codex exec --trust` does not trust the non-managed hook; see [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
 | Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
 | Gemini CLI | **Unverified** |
 | OpenCode | **Inconclusive** (live 2026-11-22: blocks not attributable to Canary; see [runbook](docs/testing/live-agent-checks.md#results)) |
