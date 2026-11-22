@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative } from "node:path";
+import { dirname, isAbsolute, join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -281,6 +281,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
     assert.match(command, /dist[\\/]cli[\\/]entry\.js/);
     assert.match(command, /hook --agent /);
     assert.doesNotMatch(command, /\bcanary(?:\.cmd)?\s+hook/);
+    const quotedPath = command.match(/^node\s+["']([^"']+)["']\s+hook --agent /);
+    assert.ok(quotedPath, "generated command must quote the build path");
+    assert.ok(isAbsolute(quotedPath[1]), "generated build path must be absolute");
   };
   switch (agent) {
     case "claude-code": {
@@ -292,6 +295,7 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assert.equal(hooks.length, 1);
       assert.ok(group.hooks.some((hook: any) => hook.command === "other-tool --check"));
       assert.match(hooks[0].args[0], /dist[\\/]cli[\\/]entry\.js$/);
+      assert.ok(isAbsolute(hooks[0].args[0]), "Claude Code build path must be absolute");
       assert.equal(hooks[0].onFailure, "block");
       assert.doesNotMatch(output, new RegExp(marker));
       break;
@@ -343,6 +347,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       const plugin = readFileSync(join(dirnameOf(configPath), ".opencode", "plugins", "canary", "index.ts"), "utf8");
       assert.match(plugin, /execFileSync\(process\.execPath/);
       assert.match(plugin, /dist.*cli.*entry\.js/);
+      const execArgs = plugin.match(/execFileSync\(process\.execPath,\s*(\[[^\]]+\])/);
+      assert.ok(execArgs, "generated OpenCode plugin must pass an argument array");
+      assert.ok(isAbsolute(JSON.parse(execArgs[1])[0]), "OpenCode build path must be absolute");
       assert.doesNotMatch(plugin, /canary hook --agent opencode/);
       break;
     }

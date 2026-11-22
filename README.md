@@ -24,7 +24,7 @@ npm pack
 npm install --global ./eyesopen21-canary-0.1.0.tgz
 ```
 
-The generated agent hook configurations call `canary` by name, so the global npm bin directory must be on `PATH` in the agent's environment. Check with `canary --help` before configuring an agent. The package's build step emits JavaScript into `dist/` using Node's built-in TypeScript type stripping; see [ADR-0006](docs/decisions/0006-zero-dependency-typescript-on-node.md).
+The generated agent hook configurations invoke `node` with an absolute path to the package's built entry, so the global npm bin directory does not need to be on the agent's `PATH`. Node.js itself must be available when the agent runs hooks. Check with `canary --help` before configuring an agent. The package's build step emits JavaScript into `dist/` using Node's built-in TypeScript type stripping; see [ADR-0006](docs/decisions/0006-zero-dependency-typescript-on-node.md) and [ADR-0007](docs/decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
 ## Quick start
 
@@ -39,7 +39,7 @@ canary init --agent claude-code
 canary crash-test
 ```
 
-`canary init` previews the full diff of Canary's changes before writing. The preview omits unchanged existing values and redacts sensitive values. It prints a reminder that `canary` must be available on `PATH`; it also reports where hook failures can let commands proceed. The `crash-test` command is designed to use an isolated temporary directory. Review [the threat model](docs/THREAT-MODEL.md) for scope and limitations.
+`canary init` previews the full diff of Canary's changes before writing. The preview omits unchanged existing values and redacts sensitive values. It prints a reminder that Node.js must be available when hooks run; it also reports where hook failures can let commands proceed. The `crash-test` command is designed to use an isolated temporary directory. Review [the threat model](docs/THREAT-MODEL.md) for scope and limitations.
 
 Supported `--agent` values are `claude-code`, `codex`, `cursor`, `gemini-cli`, and `opencode`.
 
