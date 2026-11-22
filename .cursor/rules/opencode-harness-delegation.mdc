@@ -1,0 +1,28 @@
+---
+description: When working under the OpenCode harness, delegate independent work packages to subagents in isolated worktrees and review every diff
+alwaysApply: true
+---
+
+# OpenCode harness: delegation by default
+
+This rule is internal to this project/environment. It applies to every session that runs under the OpenCode harness.
+
+## Default behavior
+
+- For any multi-part task, split the work into independent packages before editing.
+- Delegate each independent package to a separate subagent. Give every subagent the repository rules from `AGENTS.md` and `CLAUDE.md`, and require a report in English with file:line evidence.
+- Use an isolated git worktree and branch per delegated package. Never let a subagent edit the main worktree.
+- Review the complete diff of every subagent commit before integrating it. Integrate with `--no-ff` or an explicit cherry-pick, then run the full suite.
+- Prefer thorough parallel verification over token savings. Token budget is not a reason to skip delegation, an independent audit, or a repeated measurement.
+
+## When to run more subagents
+
+- Add a dedicated subagent for each independent audit, benchmark investigation, or documentation consistency check.
+- Keep benchmarks sequential even when subagents are parallel; concurrent builds and benchmark spawns corrupt timing measurements.
+
+## Non-negotiable limits
+
+- A subagent's claim is not evidence until the parent has seen the command output or reviewed the diff.
+- Never claim a test, acceptance criterion, or performance improvement passed without running it.
+- Never push, publish, tag, or change repository configuration from a delegated worktree.
+- Do not touch untracked `assets/` or read home-directory credential files.
