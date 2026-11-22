@@ -309,6 +309,8 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assertBuiltCommand(hooks[0].command, "codex");
       assert.ok(group.hooks.some((hook: any) => hook.command === "other-tool --check"));
       assert.match(output, /hook failure lets the command run/);
+      assert.match(output, /review and trust this project hook with \/hooks before it runs/);
+      assert.doesNotMatch(output, /dangerously-bypass-hook-trust/);
       break;
     }
     case "cursor": {

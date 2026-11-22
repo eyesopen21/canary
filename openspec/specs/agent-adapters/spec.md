@@ -141,6 +141,14 @@ The OpenCode adapter SHALL use `ctx.permission.hook("evaluate", ...)` for the `s
 - **WHEN** `canary init --agent gemini-cli` runs
 - **THEN** it prints that a hook failure lets the command run
 
+### Requirement: Codex project hook trust guidance
+When `canary init --agent codex` runs, it SHALL tell users to review and trust the current project hook with `/hooks` before it runs [S8]. It SHALL NOT recommend the test/automation-only trust-bypass flag.
+
+#### Scenario: Codex hook trust notice
+- **WHEN** `canary init --agent codex` runs
+- **THEN** it prints that the current project hook must be reviewed and trusted with `/hooks` before it runs [S8], as well as stating that a hook failure can let the command run
+- **AND** it does not recommend `--dangerously-bypass-hook-trust` for routine setup
+
 #### Scenario: OpenCode fail-closed status notice
 - **WHEN** `canary init --agent opencode` runs
 - **THEN** it prints that fail-closed behavior is unverified and must not be assumed

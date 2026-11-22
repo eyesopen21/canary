@@ -124,7 +124,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
 ```
 
 - Codex sets `PLUGIN_ROOT`, and also `CLAUDE_PLUGIN_ROOT` for compatibility [S8].
-- Non-managed hooks must be reviewed and trusted before they run, and a plugin update that changes a bundled script needs a new review [S8].
+- Non-managed hooks must be reviewed and trusted before they run. Use `/hooks` in the CLI to review and trust the current definition; trust is tied to that definition, so changes require another review [S8]. `canary init --agent codex` prints this instruction. The one-off `--dangerously-bypass-hook-trust` flag can skip persisted trust for automation that has independently vetted the hook source [S8]; Canary does not add it to generated commands.
 - `^Bash$` covers shell commands and unified exec (`exec_command`) [S8].
 - Codex documents a `command` string for command hooks but no `command` + `args` exec form [S8], unlike Claude Code [S1]. Canary therefore keeps one shell string for the Codex hook; on Windows that string starts an extra shell process before Node. This is a qualitative cost only; no numeric figure is claimed here, and no Codex hook behavior was changed.
 
