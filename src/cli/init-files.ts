@@ -10,6 +10,14 @@ export interface PlannedWrite {
   preview: string;
 }
 
+/** Get or create a nested object, rejecting non-object values. */
+export function objectAt(parent: Record<string, unknown>, key: string): Record<string, unknown> {
+  const value = parent[key];
+  if (value === undefined) return (parent[key] = {}) as Record<string, unknown>;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hook configuration.");
+  return value as Record<string, unknown>;
+}
+
 function statIfPresent(path: string): ReturnType<typeof lstatSync> | undefined {
   try {
     return lstatSync(path);

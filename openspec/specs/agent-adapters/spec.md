@@ -151,3 +151,7 @@ Every adapter SHALL pass the same policy message to the agent and to the user wi
 #### Scenario: Truncation at a field limit
 - **WHEN** a policy message exceeds an agent field's character limit
 - **THEN** the adapter truncates at the end and appends `…`
+
+## Note: proposed MCP tool prototype (informational)
+
+This specification describes the shipped command-hook and server-plugin adapters. The opt-in `--mcp-tool` prototype in `src/mcp-hook/` is proposed, not adopted, and adds no requirement above. The default `canary init --agent <name>` path remains a command hook. The prototype's documented limits — fail-closed without a connection, first-command timing, events before server availability, local attack surface, ADR-0003 output rules, and secret-capable hook inputs (Q22, not solved) — are recorded in [ADR-0008](../../docs/decisions/0008-mcp-tool-hooks.md) and [open questions](../../docs/open-questions.md). No live-agent behavior is verified [S1][S8].

@@ -16,6 +16,8 @@ The hosts have different failure behavior. Claude Code can set `onFailure: "bloc
 
 The proposed server evaluates the same deterministic hook policy [ADR-0001][ADR-0005]. It returns one text result containing the existing adapter JSON, or `{}` for allow. It performs no command execution and no network access. The standard MCP stdio transport still starts a local process for the agent session; the intended saving is one long-lived server instead of one new Node process per hook call.
 
+The prototype negotiates MCP protocol version **2026-07-28** [S5][S6][S7], the version catalogued in [sources.md](../sources.md#protocols-and-standards) and used by the local benchmark. Its implementation is confined to `src/mcp-hook/`: `server.ts` is the stdio JSON-RPC tool server and `config.ts` builds the opt-in server and `mcp_tool` configuration. `src/cli/main.ts` dispatches the `mcp-server` command to that module, and `src/cli/init.ts` calls `config.ts` only when `--mcp-tool` is set; the default `canary init --agent <name>` path writes a command hook and calls no MCP function. Protocol conformance of this prototype was not verified; see [Q26](../open-questions.md#open-questions-about-the-agents).
+
 ## Decision Drivers
 
 * Avoid a Node process start for every Claude Code and Codex shell tool call.
@@ -67,7 +69,7 @@ The host can also expose the MCP tool for direct model calls in addition to invo
 
 ## Confirmation
 
-* `npm run bench` compares the existing per-command process path with repeated tool calls over one persistent stdio server. Results are recorded below; this synthetic benchmark does not verify either host's live lifecycle or fail-closed behavior.
+* `npm run bench:mcp` compares the existing per-command process path with repeated tool calls over one persistent stdio server. Results are recorded below; this synthetic local benchmark does not verify either host's live lifecycle or fail-closed behavior.
 * Review every `content` text and error path against ADR-0003. A marker-secret check and MCP protocol conformance verification remain required before this prototype is considered for shipping.
 * Live verification must record Claude Code and Codex versions, server startup timing, first-command behavior, disconnected-server behavior, and whether the MCP tool is visible for direct model calls [Q21][Q23].
 
@@ -97,6 +99,6 @@ The host can also expose the MCP tool for direct model calls in addition to invo
 * Codex MCP tool hooks and fail-open behavior: [S8](../sources.md#agent-hook-and-plugin-systems).
 * MCP trust and tool behavior: [S5](../sources.md#protocols-and-standards), [S6](../sources.md#protocols-and-standards), [S7](../sources.md#protocols-and-standards).
 * Secret-free outputs: [ADR-0003](0003-findings-without-secret-values.md).
-* Open questions: [Q21–Q23](../open-questions.md#open-questions-about-the-agents).
+* Open questions: [Q21–Q23 and Q26](../open-questions.md#open-questions-about-the-agents).
 
-Benchmark result (restricted Windows workspace, Node version and values from `npm run bench`): **pending**.
+Benchmark result (synthetic local benchmark run in this harness on 2026-11-22; actual output of `npm run bench:mcp`, **not** live-agent verification): win32, Node v22.22.2, 50 measured calls per mode plus 5 warm-up calls. Command hook: 55 process starts, median 326.672 ms, p95 638.272 ms. MCP tool: 1 server process start, 55 calls on that process, cold start plus initialize 259.759 ms, median call 0.669 ms, p95 call 3.546 ms. These numbers show only local harness timing; they do not establish server lifetime, direct-call exposure, first-command behavior, or fail-closed behavior in Claude Code or Codex [Q21][Q23].

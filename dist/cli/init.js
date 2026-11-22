@@ -2,12 +2,13 @@
 import { fileURLToPath } from "node:url";
 import { FAIL_OPEN_NOTICE } from "../adapters/config.js";
 import {
-  applyPlannedWrites, displayPreview, readConfiguration, writeJsonConfiguration, writeOpenCodeJsonc,
+  applyPlannedWrites, displayPreview, objectAt, readConfiguration, writeJsonConfiguration, writeOpenCodeJsonc,
   writeTextConfiguration,
                     
 } from "./init-files.js";
-
-const BUILD_ENTRY = fileURLToPath(new URL("../../dist/cli/entry.js", import.meta.url));
+import {
+  isMcpAgent, isMcpHook, mcpHook, planClaudeMcpServer, planCodexMcpServer,
+} from "../mcp-hook/config.js";
 
 /** Self-contained hook bundle: core plus one adapter, stdin to stdout. */
 const HOOK_BUNDLE = (agent           ) => fileURLToPath(new URL(`../../dist/hook/${agent}.mjs`, import.meta.url));
@@ -23,13 +24,6 @@ function shellQuote(value        )         {
 }
 
 const COMMAND = (agent           ) => "node " + shellQuote(HOOK_BUNDLE(agent));
-
-function objectAt(parent                         , key        )                          {
-  const value = parent[key];
-  if (value === undefined) return (parent[key] = {})                           ;
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hook configuration.");
-  return value                           ;
-}
 
 function arrayAt(parent                         , key        )            {
   const value = parent[key];
@@ -85,71 +79,7 @@ function isCanaryHook(entry                         , agent           )         
     || command === "canary hook --agent " + agent
     || command.endsWith(" " + suffix);
   return isBundle || isLegacy
-    || (agent !== "cursor" && agent !== "gemini-cli" && agent !== "opencode"
-      && entry?.type === "mcp_tool" && entry.server === "canary" && entry.tool === "canary_pre_tool_use");
-}
-
-function mcpHook(agent                         )                          {
-  const hook                          = {
-    type: "mcp_tool",
-    server: "canary",
-    tool: "canary_pre_tool_use",
-    input: {
-      agent,
-      tool_name: "${tool_name}",
-      command: "${tool_input.command}",
-      cwd: "${cwd}",
-    },
-    timeout: 10,
-  };
-  if (agent === "claude-code") hook.onFailure = "block";
-  else hook.statusMessage = "Canary: checking command";
-  return hook;
-}
-
-function planClaudeMcpServer(root        )               {
-  const server = { command: process.execPath, args: [BUILD_ENTRY, "mcp-server"] };
-  return writeJsonConfiguration(root, ".mcp.json", (config) => {
-    const servers = objectAt(config, "mcpServers");
-    const current = servers.canary;
-    if (current !== undefined) {
-      if (current && typeof current === "object" && !Array.isArray(current)
-        && (current                           ).command === server.command
-        && Array.isArray((current                           ).args)
-        && ((current                           ).args             ).join("\0") === server.args.join("\0")) {
-        return false;
-      }
-      throw new Error("MCP server 'canary' is already configured.");
-    }
-    servers.canary = server;
-    return false;
-  }, { mcpServers: { canary: server } });
-}
-
-function planCodexMcpServer(root        )               {
-  const command = JSON.stringify(process.execPath);
-  const args = JSON.stringify([BUILD_ENTRY, "mcp-server"]);
-  const addition = '# Added by canary init --mcp-tool.\n[mcp_servers.canary]\ncommand = '
-    + command + '\nargs = ' + args;
-  return writeTextConfiguration(root, ".codex/config.toml", (current) => {
-    const source = current ?? "";
-    const lines = source.split(/\r?\n/);
-    const sectionIndex = lines.findIndex((line) => /^\s*\[mcp_servers\.(?:canary|"canary")\]\s*(?:#.*)?$/.test(line));
-    if (sectionIndex >= 0) {
-      const nextSection = lines.findIndex((line, index) => index > sectionIndex && /^\s*\[/.test(line));
-      const section = lines.slice(sectionIndex + 1, nextSection < 0 ? undefined : nextSection).join("\n");
-      if (section.includes("command = " + command) && section.includes("args = " + args)) {
-        return { content: source, changed: false };
-      }
-      throw new Error("MCP server 'canary' is already configured.");
-    }
-    const newline = source.includes("\r\n") ? "\r\n" : "\n";
-    const suffix = addition.replace(/\n/g, newline);
-    return {
-      content: source + (source && !source.endsWith("\n") ? newline : "") + suffix + newline,
-      changed: true,
-    };
-  }, addition);
+    || (agent !== "cursor" && agent !== "gemini-cli" && agent !== "opencode" && isMcpHook(entry));
 }
 
 function planClaude(root        , useMcpTool = false)               {
@@ -251,7 +181,7 @@ function failOpenNotice(agent           )       {
 
 export function initAgent(agent           , root        , options                        = {})       {
   const useMcpTool = options.mcpTool === true;
-  if (useMcpTool && agent !== "claude-code" && agent !== "codex") {
+  if (useMcpTool && !isMcpAgent(agent)) {
     throw new Error("The MCP tool prototype supports Claude Code and Codex only.");
   }
   let writes                ;

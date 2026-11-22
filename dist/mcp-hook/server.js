@@ -1,6 +1,6 @@
 import { createClaudeCodeAdapter } from "../adapters/claude-code.js";
 import { createCodexAdapter } from "../adapters/codex.js";
-import { hookEvaluator } from "./hook.js";
+import { hookEvaluator } from "../cli/hook.js";
 
 const PROTOCOL_VERSIONS = new Set(["2026-07-28", "2025-11-25", "2025-06-18"]);
 const MAX_FRAME_CHARS = 1_048_576;

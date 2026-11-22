@@ -10,6 +10,14 @@ import { isAbsolute, join, relative, resolve, sep } from "node:path";
                   
  
 
+/** Get or create a nested object, rejecting non-object values. */
+export function objectAt(parent                         , key        )                          {
+  const value = parent[key];
+  if (value === undefined) return (parent[key] = {})                           ;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hook configuration.");
+  return value                           ;
+}
+
 function statIfPresent(path        )                                           {
   try {
     return lstatSync(path);

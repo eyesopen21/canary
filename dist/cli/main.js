@@ -74,7 +74,7 @@ export async function main(args          )                  {
       }
       case "mcp-server": {
         if (options.length) throw new UsageError("Usage: canary mcp-server");
-        const { runMcpServer } = await import("./mcp-server.js");
+        const { runMcpServer } = await import("../mcp-hook/server.js");
         runMcpServer();
         break;
       }

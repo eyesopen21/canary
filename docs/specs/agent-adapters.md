@@ -29,6 +29,19 @@ The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is e
 
 The Claude Code, Codex, and Gemini CLI GitHub install instructions define package files and hook locations but no build-on-install step [S4][S8][S12]. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
+## Opt-in MCP tool prototype (proposed, not the default)
+
+The default `canary init --agent claude-code|codex` path writes a command hook and is unchanged. Only `--mcp-tool` may use the experimental code in `src/mcp-hook/`. [ADR-0008](../decisions/0008-mcp-tool-hooks.md) owns this decision and keeps `status: proposed`. Its documented limits, all still open, are:
+
+* **Fail-closed without a connection is not guaranteed.** Claude Code's `onFailure: "block"` for an `mcp_tool` hook needs v2.1.328; Codex documents no fail-closed MCP hook option and proceeds when the server is missing, unavailable, or times out [S1][S8].
+* **First command of a session may be unchecked on Codex**, which uses an already-connected server; Claude Code instead waits on a connecting server at `PreToolUse`, bounded by its hooks and MCP timeouts [S1][S8].
+* **Events before server availability cannot be checked by this tool.** The launch `SessionStart` happens before MCP servers are available and Claude Code skips MCP `SessionStart` hooks, so the prototype has no MCP call at session launch [S1].
+* **Attack surface grows.** The local server parses JSON-RPC, lives for the session, reads the evaluator's environment and repository paths, and is exposed to direct model calls. It exposes one read-only tool with no shell execution and no network, but that does not remove local-process trust risk [S5][S7].
+* **ADR-0003 still applies** to every result: text output only, containing the existing sanitized policy JSON or `{}`, never a command, secret, environment value, host, path, or exception text [S6].
+* **Hook inputs can carry secrets.** The tool accepts `tool_input.command` as arbitrary text; neither host documents pre-call redaction [S1][S8]. Q22 in [open-questions.md](../open-questions.md#open-questions-about-the-agents) is **not solved** and remains a shipping blocker for any no-secrets claim.
+
+No live Claude Code or Codex session was tested. First-command timing, disconnected-server behavior, connection lifetime, and tool visibility remain open [Q21][Q23]; protocol conformance of the prototype remains open [Q26].
+
 ## Claude Code
 
 **Configuration.** The package manifest `.claude-plugin/plugin.json` points to `hooks/claude-code.json`, which registers the `PreToolUse` hook. `canary init --agent claude-code` writes `.claude/settings.json` in a project. Both invoke Node with the built `dist/hook/claude-code.mjs`; the package commits `dist/` because GitHub marketplace installs do not run a Canary build step (see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md)). The generated project configuration stores the absolute path to that bundle.
