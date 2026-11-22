@@ -1,0 +1,7 @@
+{
+  "name": "trap-c3",
+  "scripts": {
+    "clean": "rm -rf \"$BUILD_DIR\"",
+    "ok": "echo ok"
+  }
+}
