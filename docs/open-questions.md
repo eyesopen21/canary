@@ -61,7 +61,7 @@ The hook is only as strong as the agent that runs it. These questions decide wha
 | Q16 | Is the SWE-CoWork result (fewer than 8% of tasks completed with requirements spread across simulated colleagues) accurate, and where is the paper? | Open. Not cited. |
 | Q17 | Does the SRS outline match ISO/IEC/IEEE 29148:2018 clause by clause? | Open. The outline follows the commonly published SRS contents of the standard. The full text was not available. |
 | Q18 | Should hosts of non-local databases appear in hook messages? | Resolved by design for P0: no. Messages name the variable and the classification "non-local", never the host or URL. Revisit if users need more detail. |
-| Q20 | Should CAN-N-05 be split into (1) in-process `evaluate()` p50 below 10 ms and (2) hook spawn overhead above the `node -e \"\"` startup floor p50 below 30 ms, with absolute per-OS p50/p90 values recorded as information only? | Open. The previously recorded restricted Windows run measured a 119 ms median for empty Node startup, already above the absolute 100 ms target in that environment. |
+| Q20 | Should CAN-N-05 be split into (1) in-process `evaluate()` p50 below 10 ms and (2) hook spawn overhead, calculated as configured-hook p50 minus the `node -e \"\"` startup-floor p50, below 30 ms? Should absolute per-OS p50/p90 values be informational only? | Open. The previously recorded restricted Windows run measured a 119 ms median for empty Node startup, already above the absolute 100 ms target in that environment. |
 
 ## Notes on inputs not used
 
