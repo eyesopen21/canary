@@ -63,6 +63,12 @@ The hook is only as strong as the agent that runs it. These questions decide wha
 | Q18 | Should hosts of non-local databases appear in hook messages? | Resolved by design for P0: no. Messages name the variable and the classification "non-local", never the host or URL. Revisit if users need more detail. |
 | Q20 | Should CAN-N-05 be split into (1) in-process `evaluate()` p50 below 10 ms and (2) hook spawn overhead, calculated as configured-hook p50 minus the `node -e \"\"` startup-floor p50, below 30 ms? Should absolute per-OS p50/p90 values be informational only? | Open. The previously recorded restricted Windows run measured a 119 ms median for empty Node startup, already above the absolute 100 ms target in that environment. |
 
+## Open question about the live-check setup
+
+| ID | Question | Current evidence | Status |
+| --- | --- | --- | --- |
+| Q24 | Can the live-check setup script run its local bare-remote force-push preflight in restricted Windows temp environments? | On 2026-11-22, `node scripts/live-check-setup.mjs --agent codex` exited with `LOCAL_REMOTE_UNAVAILABLE` at the force-push dry run after seeding and verifying the bare ref. Do not treat setup as ready until the dry run succeeds in the target environment. | Open |
+
 ## Notes on inputs not used
 
 - The design notes [S24] contain an internal marketing section. It is not reproduced in this repository by decision of the author.
