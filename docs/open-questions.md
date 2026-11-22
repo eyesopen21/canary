@@ -28,6 +28,20 @@ Status values: **Assumed** (a default chosen without confirmation), **Open** (un
 | A8 | The Blast Radius Score starts at 100 and subtracts a weight per finding: critical 25, high 15, medium 5, low 1, with a floor of 0. Higher is safer. | The notes [S24] define the 0 to 100 range and a CI minimum, which implies higher is better. They do not define weights. | Assumed |
 | A9 | "Local database host" means `localhost`, `127.0.0.0/8`, `::1`, a Unix socket path, or a host name ending in `.localhost`, or a Docker Compose service name declared in the repository. | The notes [S24] say "local or container database" and give no list. | Assumed |
 
+## Classification of assumptions (2026-11-22)
+
+| ID | Classification | Evidence or next step |
+| --- | --- | --- |
+| A1 | Pending verification | No primary Dojo Marketplace requirements were supplied; the layout comes only from the sponsor project [S22]. Ask the organizers to confirm the required root layout. |
+| A2 | Pending verification | README, LICENSE and CHANGELOG are present because both sponsor projects have them [S22][S23]; the listing rules are unknown. Ask the organizers. |
+| A3 | Pending verification | Both sponsor projects use MIT [S22][S23]. Confirm the marketplace licence policy with the organizers. |
+| A4 | Decision recorded; external check partial | `package.json:2,15-17` declares `@eyesopen21/canary` and the `canary` binary. The npm registry returned 404 for that scoped name on 2026-11-22, so it is not published by anyone else. Publishing remains a maintainer decision. |
+| A5 | Decision recorded | `package.json:19` fixes the engine at `node >=22.22.0`. Confirm with the maintainer whether a broader Node 22 LTS floor is intended. |
+| A6 | Decision recorded | `LICENSE:3` names "Canary contributors". Confirm the legal holder before any release. |
+| A7 | Pending human action | `SECURITY.md` documents private reporting; enabling GitHub private vulnerability reporting is a repository-admin action that cannot be verified from a checkout. |
+| A8 | Confirmed by implementation | The weights and floor are implemented and asserted by `tests/score.test.ts` and `docs/specs/policy.md`. The choice remains a design decision [S24]. |
+| A9 | Confirmed by implementation | The local-host list is implemented and covered by the policy table (`tests/policy.test.ts`) and C1 checks. |
+
 ## Open questions about the agents
 
 The hook is only as strong as the agent that runs it. These questions decide what the README may promise.
