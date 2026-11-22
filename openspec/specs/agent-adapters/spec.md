@@ -46,6 +46,20 @@ The package SHALL commit `dist/cli/entry.js` and one `dist/hook/<agent>.mjs` bun
 - **WHEN** `canary init` runs against a configuration with an `entry.js` `hook --agent` Canary hook
 - **THEN** the existing hook is replaced by the per-agent bundle command
 
+### Requirement: Documented Codex shell launch cost
+The adapter documentation SHALL state that Codex command hooks use a single shell `command` string because [S8] does not document a `command` + `args` exec form, and that on Windows this adds an extra shell process before Node. It SHALL NOT change generated hook configuration or assert a numeric cost.
+
+#### Scenario: Codex shell string is documented
+- **WHEN** the adapter documentation describes the Codex generated hook
+- **THEN** it cites [S8] for the single shell `command` string and the qualitative extra-shell-process cost on Windows, and it does not claim an exec form for Codex
+
+### Requirement: Documented Cursor Windows shell layer
+The adapter documentation SHALL state that on Windows the Cursor desktop app runs hook commands through PowerShell [S9] and that this shell layer and its cost are outside Canary's control. It SHALL NOT change generated hook configuration.
+
+#### Scenario: Cursor Windows shell layer is documented as external
+- **WHEN** the adapter documentation describes the Cursor generated hook
+- **THEN** it cites [S9] for hook commands running through PowerShell on Windows and states that this cost is outside Canary's control
+
 ### Requirement: Core and adapter boundary
 Each adapter SHALL read only the fields documented for its agent, pass the command, working directory, and project root to the shared core, and write the core's decision back in the agent's format. Policy logic SHALL live in the core, not in an adapter. Adapters SHALL NOT read identity fields, environment values, or the full command into logs.
 

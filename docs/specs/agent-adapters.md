@@ -25,7 +25,7 @@ Every field name and event name below is copied from the cited documentation. Th
 
 ## Built JavaScript runtime
 
-The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`.
+The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`. Codex and Cursor keep a single shell `command` string: [S8] documents no `command` + `args` exec form for Codex, and Cursor's hook commands are run through a shell chosen by the desktop app [S9]. See the per-agent sections below for the resulting cost.
 
 The Claude Code, Codex, and Gemini CLI GitHub install instructions define package files and hook locations but no build-on-install step [S4][S8][S12]. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
@@ -113,6 +113,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
 - Codex sets `PLUGIN_ROOT`, and also `CLAUDE_PLUGIN_ROOT` for compatibility [S8].
 - Non-managed hooks must be reviewed and trusted before they run, and a plugin update that changes a bundled script needs a new review [S8].
 - `^Bash$` covers shell commands and unified exec (`exec_command`) [S8].
+- Codex documents a `command` string for command hooks but no `command` + `args` exec form [S8], unlike Claude Code [S1]. Canary therefore keeps one shell string for the Codex hook; on Windows that string starts an extra shell process before Node. This is a qualitative cost only; no numeric figure is claimed here, and no Codex hook behavior was changed.
 
 **Input read.** `tool_name`, `tool_input.command`, `cwd` [S8].
 
@@ -162,6 +163,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 - `failClosed: true` blocks the action when the hook crashes, times out, exits non-zero, or prints nothing [S9].
 - Project hooks run only in trusted workspaces [S9].
 - `beforeShellExecution` is an alternative event with the same `permission` output [S9]. The MVP uses `preToolUse` only, to avoid running twice.
+- On Windows, the Cursor desktop app runs hook commands through PowerShell [S9]. That shell layer and its startup cost are chosen by Cursor and are outside Canary's control; Canary does not change the Cursor hook command because of it.
 
 **Input read.** `tool_name`, `tool_input.command`, `tool_input.working_directory`, `cwd`, `workspace_roots` [S9]. The project root comes from `CURSOR_PROJECT_DIR` [S9]. The adapter MUST NOT read `user_email` [S9].
 
