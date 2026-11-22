@@ -1,0 +1,6 @@
+[workspace]
+trust_level = "trusted"
+
+[mcp_servers.docs]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-docs"]

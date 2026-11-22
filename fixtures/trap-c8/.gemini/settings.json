@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "secure": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-secure@2.0.1"]
+    }
+  },
+  "env": {
+    "API_TOKEN": "CANARY_SYNTHETIC_MARKER_7f3a-do-not-print"
+  }
+}
