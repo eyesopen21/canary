@@ -404,31 +404,41 @@ test("init validates flags, previews before writing, merges safely, and reports 
   }
 });
 
-test("C3 script scan reports unguarded variable and substitution targets without requiring symlinks", (t) => withFreshDirectory((temp) => {
+test("C3 script scan reports unguarded variable and substitution targets without requiring symlinks", () => withFreshDirectory((temp) => {
   const repo = copyTrap("trap-c3", temp);
   const home = join(temp, "home");
   mkdirSync(home);
-
-  // Windows may deny symlink creation without Developer Mode or elevation.
-  // Script coverage remains unconditional and independently exercises C3.
-  const outside = join(temp, "outside-target");
-  mkdirSync(outside);
-  try {
-    symlinkSync(outside, join(repo, "external-target"), "junction");
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code === "EPERM" || code === "EACCES" || code === "UNKNOWN") t.diagnostic("symlink subcase skipped by OS permissions");
-    else throw error;
-  }
 
   const result = runCli(["scan", "--json"], repo, home);
   assert.equal(result.status, 0, result.stderr);
   const document = JSON.parse(result.stdout);
   const c3 = document.findings.filter((finding: any) => finding.check === "C3");
   assert.ok(c3.some((finding: any) => /variable|substitution|unguarded/i.test(`${finding.rule} ${finding.danger}`)));
-  if (existsSync(join(repo, "external-target"))) {
-    assert.ok(c3.some((finding: any) => /link|junction/i.test(`${finding.rule} ${finding.danger}`)));
+}));
+
+test("C3 scan reports symlink targets outside the repository", (t) => withFreshDirectory((temp) => {
+  const repo = copyTrap("trap-c3", temp);
+  const home = join(temp, "home");
+  const outside = join(temp, "outside-target");
+  mkdirSync(home);
+  mkdirSync(outside);
+
+  try {
+    symlinkSync(outside, join(repo, "external-target"), "junction");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (process.platform === "win32" && (code === "EPERM" || code === "EACCES" || code === "UNKNOWN")) {
+      t.skip("Windows denied junction/symlink creation");
+      return;
+    }
+    throw error;
   }
+
+  const result = runCli(["scan", "--json"], repo, home);
+  assert.equal(result.status, 0, result.stderr);
+  const document = JSON.parse(result.stdout);
+  const c3 = document.findings.filter((finding: any) => finding.check === "C3");
+  assert.ok(c3.some((finding: any) => /link|junction/i.test(`${finding.rule} ${finding.danger}`)));
 }));
 
 test("CAN-T-08: scan completes with Node networking disabled", () => {
