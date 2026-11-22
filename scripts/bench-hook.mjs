@@ -274,7 +274,8 @@ try {
   process.stdout.write(`CPU: ${cpu} (${logicalProcessors} logical processors)\n`);
   process.stdout.write(`Node: ${process.version}\n`);
   process.stdout.write("Generated hook command: run exactly as configured (per-agent bundle)\n");
-  process.stdout.write(`Samples per row: ${WARM_UP_RUNS} warm-up + ${MEASURED_RUNS} measured; percentiles use linear interpolation.\n\n`);
+  process.stdout.write(`Samples per row: ${WARM_UP_RUNS} warm-up + ${MEASURED_RUNS} measured; percentiles use linear interpolation.\n`);
+  process.stdout.write("CAN-N-05 target applies to in-process evaluate() only; wall-clock hook latency and the Node startup floor are reported separately and are not hidden. See ADR-0009.\n\n");
 
   process.stdout.write("Node startup floor\n");
   printTable(["Command", "Median (ms)", "P90 (ms)"], [[floor.label, formatMs(floor.median), formatMs(floor.p90)]]);

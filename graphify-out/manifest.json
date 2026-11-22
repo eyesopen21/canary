@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795379466.4290025,
-    "seen": 1795379492.7784884,
-    "ast_hash": "8bcee7177bbf767cf00ab42f73988dff",
+    "mtime": 1795381290.7718089,
+    "seen": 1795381526.737632,
+    "ast_hash": "803b724f73a5f744466886174aeaaac8",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "docs/SRS.md": {
-    "mtime": 1795379472.9229245,
-    "seen": 1795379492.7785218,
-    "ast_hash": "9080fdd72c3c9244df14f5dc875af345",
+    "mtime": 1795381479.4261117,
+    "seen": 1795381526.7376623,
+    "ast_hash": "89b08ff5e79677ac1a66fa259b19af51",
     "semantic_hash": ""
   },
   "docs/THREAT-MODEL.md": {
@@ -594,21 +594,21 @@
     "semantic_hash": ""
   },
   "docs/decisions/README.md": {
-    "mtime": 1795379429.9212232,
-    "seen": 1795379492.778576,
-    "ast_hash": "61ea78c1fa0c40e07658ba0d6a22bff7",
+    "mtime": 1795381283.8843043,
+    "seen": 1795381526.7377124,
+    "ast_hash": "cb0de43f5135fc9b467558b7fe9601e4",
     "semantic_hash": ""
   },
   "docs/open-questions.md": {
-    "mtime": 1795378861.3260489,
-    "seen": 1795379492.7785828,
-    "ast_hash": "685717423e962c78ac5bb291241f2a24",
+    "mtime": 1795381266.256213,
+    "seen": 1795381526.7377164,
+    "ast_hash": "75b4c661c379d360539702bbf03bc1b7",
     "semantic_hash": ""
   },
   "docs/sources.md": {
-    "mtime": 1795372357.3586113,
-    "seen": 1795377929.25347,
-    "ast_hash": "1ce5216cc86b199891521abc6e023ce2",
+    "mtime": 1795380974.317496,
+    "seen": 1795381526.7377205,
+    "ast_hash": "ac02e22e2167a46432fcacbed005e304",
     "semantic_hash": ""
   },
   "docs/specs/agent-adapters.md": {
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "scripts/bench-hook.mjs": {
-    "mtime": 1795377464.9218137,
-    "seen": 1795377929.2530892,
-    "ast_hash": "a3d9d659544a124103a681e42ac89c59",
+    "mtime": 1795381246.0608509,
+    "seen": 1795381526.7372744,
+    "ast_hash": "ade9f04def30d0ea122c5b57c4e68e66",
     "semantic_hash": ""
   },
   "scripts/bench-mcp-tool.mjs": {
@@ -780,9 +780,9 @@
     "semantic_hash": ""
   },
   "docs/decisions/0008-mcp-tool-hooks.md": {
-    "mtime": 1795379409.685988,
-    "seen": 1795379492.778571,
-    "ast_hash": "57d31e992f72f89197cca05bc7652baf",
+    "mtime": 1795379747.5764558,
+    "seen": 1795381526.7377024,
+    "ast_hash": "9e07c12435f4931cc97a0db335e8513c",
     "semantic_hash": ""
   },
   "docs/testing/live-agent-checks.md": {
@@ -837,6 +837,12 @@
     "mtime": 1795378552.8215947,
     "seen": 1795379492.7783768,
     "ast_hash": "e42eb362f07e091bed7a67f762fd3a9f",
+    "semantic_hash": ""
+  },
+  "docs/decisions/0009-split-performance-target.md": {
+    "mtime": 1795381277.3730328,
+    "seen": 1795381526.7377074,
+    "ast_hash": "c3fbc075a9fa7598ef0e946c55dcac91",
     "semantic_hash": ""
   }
 }

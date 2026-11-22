@@ -12,5 +12,6 @@ Decisions are recorded in the MADR format [S20] (see [sources.md](../sources.md)
 | [0006](0006-zero-dependency-typescript-on-node.md) | Zero-dependency TypeScript on Node | Accepted |
 | [0007](0007-commit-built-javascript-for-marketplace-installs.md) | Commit built JavaScript for marketplace installs | Accepted |
 | [0008](0008-mcp-tool-hooks.md) | Run Claude Code and Codex hooks through a stdio MCP server | Proposed |
+| [0009](0009-split-performance-target.md) | Split the hook performance target from the OS runtime startup cost | Accepted |
 
 To add a decision, copy the MADR template [S20], number it with the next free number, and add it to this table. A decision is changed by a new ADR that supersedes it, not by editing an accepted one.
