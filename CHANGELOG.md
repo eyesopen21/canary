@@ -28,6 +28,7 @@ The npm package is not published. This section records repository changes; it do
 
 ### Fixed
 
+- C3 link containment now compares canonical paths, so an in-repository symlink or junction under a symlinked root (for example macOS `/var` → `/private/var`) is no longer reported as escaping while a genuinely escaping link is still reported. The C3 link fixtures now use a canonical absolute temporary base.
 - The setup script now reports Git's short diagnostic with `LOCAL_REMOTE_UNAVAILABLE`, so a restricted-harness transport block can be distinguished from a script defect. Q24 records both outcomes.
 - Generated hook paths are now asserted to be absolute, and README no longer says hooks require `canary` on `PATH`.
 

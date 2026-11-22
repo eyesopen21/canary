@@ -83,18 +83,27 @@ function finding(
   };
 }
 
-function linkEscapes(root        , link        )          {
-  let target        ;
+/** Resolve a path to its symlink-free form, falling back to an absolute path. */
+function canonicalPath(candidate        )         {
   try {
-    target = realpathSync(link);
+    return realpathSync.native(candidate);
   } catch {
-    try {
-      target = resolveLinkTarget(link);
-    } catch {
-      return false;
-    }
+    return resolve(candidate);
   }
-  const outside = relative(root, target);
+}
+
+/**
+ * True when `target` lies outside `root`. Both sides are compared canonically:
+ * a symlinked component in the root (for example macOS /var -> /private/var)
+ * must not make an in-repository target look like it escapes. The resolver is
+ * injectable so the path-resolution shapes can be tested without a host FS.
+ */
+export function linkTargetEscapes(
+  root        ,
+  target        ,
+  canonicalize                                = canonicalPath,
+)          {
+  const outside = relative(canonicalize(root), canonicalize(target));
   return (
     outside === ".." ||
     outside.startsWith(`..${sep}`) ||
@@ -102,8 +111,20 @@ function linkEscapes(root        , link        )          {
   );
 }
 
-function resolveLinkTarget(link        )         {
-  return resolve(dirname(link), readlinkSync(link));
+function linkEscapes(root        , link        )          {
+  let target        ;
+  try {
+    target = realpathSync.native(link);
+  } catch {
+    try {
+      // Resolve the parent canonically: readlink() returns a raw target that
+      // may be relative, and macOS temp roots contain a /var symlink.
+      target = resolve(canonicalPath(dirname(link)), readlinkSync(link));
+    } catch {
+      return false;
+    }
+  }
+  return linkTargetEscapes(root, target);
 }
 
 export const checkDeletes        = (root) => {

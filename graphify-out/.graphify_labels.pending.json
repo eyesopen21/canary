@@ -67,14 +67,16 @@
   "65": "live-check-setup.mjs",
   "66": "Run Claude Code and Codex hooks through a stdio MCP server",
   "67": "bundles.test.ts",
-  "68": "bench-mcp-tool.mjs",
+  "68": "contract.ts",
   "69": "Commit built JavaScript for marketplace installs",
   "70": "user_email",
   "71": "Install, trust, review, prompt, and check by agent",
-  "72": "build.mjs",
+  "72": "hook.ts",
   "73": "packaging.test.ts",
   "74": "3. Specific requirements (P0)",
-  "75": "ref_node_path",
+  "75": "runtime.ts",
   "76": "Agent adapters",
-  "78": "ref_node_child_process"
+  "77": "adapters/cursor.ts",
+  "78": "ref_node_child_process",
+  "79": "Session"
 }

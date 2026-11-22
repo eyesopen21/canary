@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { cpSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import type { CheckFinding } from "../src/contract.ts";
 import { checkDatabase } from "../src/core/checks/database.ts";
 import { checkCredentials } from "../src/core/checks/credentials.ts";
-import { checkDeletes } from "../src/core/checks/deletes.ts";
+import { checkDeletes, linkTargetEscapes } from "../src/core/checks/deletes.ts";
 
 const ROOT = process.cwd();
 const LEAK_TOKENS = [
@@ -23,7 +24,15 @@ function fixture(...parts: string[]): string {
 }
 
 function tempBase(): string {
-  return process.env.TEMP || process.env.TMPDIR || process.env.TMP || ".";
+  const configured = process.env.TEMP || process.env.TMPDIR || process.env.TMP || tmpdir();
+  // Use a canonical absolute base. A relative base writes relative paths into
+  // symlink targets (which then resolve inside the repo), and an unresolved
+  // /var prefix on macOS diverges from the realpath of the link target.
+  try {
+    return realpathSync.native(configured);
+  } catch {
+    return resolve(configured);
+  }
 }
 
 function tuple(finding: CheckFinding): string {
@@ -153,6 +162,26 @@ test("C3 trap: unguarded deletes and missing set -u", () => {
   } finally {
     rmSync(base, { recursive: true, force: true });
   }
+});
+
+test("C3 link containment: canonical root avoids /var vs /private/var false positives", () => {
+  // Reproduces the macOS path-resolution shape deterministically: TMPDIR is
+  // /var/folders/... while realpath() reports /private/var/folders/... . The
+  // comparison must canonicalize the root before deciding containment.
+  const canonicalize = (candidate: string): string =>
+    candidate.startsWith("/var/") ? `/private${candidate}` : candidate;
+  const root = "/var/folders/ab/cd/repo";
+  assert.equal(linkTargetEscapes(root, "/private/var/folders/ab/cd/repo", canonicalize), false);
+  assert.equal(
+    linkTargetEscapes(root, "/private/var/folders/ab/cd/repo/scripts", canonicalize),
+    false,
+  );
+  assert.equal(linkTargetEscapes(root, "/private/var/folders/ab/cd/outside", canonicalize), true);
+
+  // With already-canonical paths the default resolver still catches a real
+  // escape and accepts an in-repository target.
+  assert.equal(linkTargetEscapes("/tmp/repo", "/tmp/outside"), true);
+  assert.equal(linkTargetEscapes("/tmp/repo", "/tmp/repo/scripts"), false);
 });
 
 test("C3 trap: an escaping junction or symlink is reported", (t) => {
