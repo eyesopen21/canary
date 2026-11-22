@@ -10,7 +10,7 @@ export default Plugin.define({
     await ctx.permission.hook("evaluate", async (event) => {
       if (event.action !== "shell") return;
       try {
-        const output = execFileSync(process.execPath, [hookBundle], {
+        const output = execFileSync("node", [hookBundle], {
           input: JSON.stringify({ action: event.action, resources: event.resources }),
           encoding: "utf8",
           stdio: ["pipe", "pipe", "ignore"],

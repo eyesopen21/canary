@@ -25,9 +25,9 @@ Claims that have no source here are design decisions of this project, and the do
 | S31 | Cloudflare, *Code Mode: the better way to use MCP*. <https://blog.cloudflare.com/code-mode/> | Code Mode turns MCP tools into a TypeScript API so an LLM writes one script instead of many tool calls; disposable V8 isolates run it through the Worker Loader API with network blocked and access only through bindings |
 | S32 | OpenAI, *Package your plugin*. <https://developers.openai.com/plugins/build/plugins> | Page linked by [S8] for Codex plugin packaging rules: hook scripts must already exist in the execution environment and a web install does not deploy them; npm-sourced packages download without running lifecycle scripts; installing or enabling a plugin does not trust its hooks; no install-time build step (Q25) |
 | S13 | OpenCode, *Plugins*. <https://opencode.ai/docs/plugins> | Plugin configuration and discovery under `.opencode/plugins/` |
-| S14 | OpenCode, *Server* (plugin API). <https://opencode.ai/docs/build/plugins/server> | `ctx.permission.hook("evaluate", ...)`, `ctx.tool.hook("execute.before", ...)` |
-| S15 | OpenCode, *V1 plugin migration*. <https://opencode.ai/docs/build/plugins/migrate-v1> | Mapping from V1 `tool.execute.before` to V2 hooks |
-| S16 | OpenCode, *Permissions*. <https://opencode.ai/docs/permissions> | Permission rules (`action`, `resource`, `effect`) and policies |
+| S14 | OpenCode, *Server* (plugin API). <https://opencode.ai/docs/build/plugins/server> | V2 `ctx.permission.hook("evaluate", ...)` event/decision behavior; explicit deny bypasses evaluate; V2 `execute.before` is described for inspecting or replacing tool input |
+| S15 | OpenCode, *V1 plugin migration*. <https://opencode.ai/docs/build/plugins/migrate-v1> | Mapping from V1 `tool.execute.before` to V2 `ctx.tool.hook("execute.before", ...)`; no veto semantics documented |
+| S16 | OpenCode, *Permissions*. <https://opencode.ai/docs/permissions> | Permission rules (`action`, `resource`, `effect`), shell scanner resources and policies |
 
 ## Protocols and standards
 
