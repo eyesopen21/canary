@@ -1,0 +1,5 @@
+{
+  "name": "canary",
+  "description": "Blocks irreversible shell commands before an agent runs them.",
+  "version": "0.1.0"
+}
