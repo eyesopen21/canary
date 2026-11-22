@@ -1,0 +1,9 @@
+{
+  // OpenCode MCP entry
+  "mcp": {
+    "time": {
+      "command": "mcp-server-time",
+      "args": []
+    }
+  }
+}

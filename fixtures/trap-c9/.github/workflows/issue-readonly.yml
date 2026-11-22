@@ -1,0 +1,11 @@
+name: Read-only triage
+on:
+  issue_comment:
+permissions:
+  contents: read
+  issues: read
+jobs:
+  respond:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
