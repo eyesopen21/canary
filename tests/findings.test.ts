@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { join } from "node:path";
 import type { CheckFinding } from "../src/contract.ts";
+import { checkCredentials } from "../src/core/checks/credentials.ts";
 import {
   FindingError,
   SCHEMA_VERSION,
@@ -139,6 +141,31 @@ test("findings.json follows the SRS 3.5 shape", () => {
     "manual",
   ]);
   assert.deepEqual(Object.keys(document.findings[0].evidence), ["kind", "name"]);
+});
+
+test("C2 fixture findings serialize without rejecting the .env.example filename", () => {
+  const root = join(process.cwd(), "fixtures", "trap-c2", "repo");
+  const fixtureHome = join(process.cwd(), "fixtures", "trap-c2", "home");
+  const previousHome = process.env.CANARY_HOME;
+
+  process.env.CANARY_HOME = fixtureHome;
+  try {
+    const findings = checkCredentials(root);
+    const json = serializeFindings({
+      findings: [...findings, draft({ path: ".env.example", line: 1 })],
+    });
+
+    assert.equal(json.includes(MARKER), false);
+    assert.equal(findLeak(json), null);
+    assert.ok(json.includes('"path": ".env.example"'));
+    assert.throws(
+      () => makeFinding(draft({ path: "config/db.production.example" })),
+      FindingError,
+    );
+  } finally {
+    if (previousHome === undefined) delete process.env.CANARY_HOME;
+    else process.env.CANARY_HOME = previousHome;
+  }
 });
 
 test("two identical runs are byte-identical and sorted worst first (CAN-T-07)", () => {

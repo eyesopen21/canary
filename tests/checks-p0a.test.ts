@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import test from "node:test";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { CheckFinding } from "../src/contract.ts";
 import { checkDatabase } from "../src/core/checks/database.ts";
@@ -91,47 +92,56 @@ test("C1 trap: exactly three non-local database findings, all critical", () => {
 });
 
 test("C2 trap: credential patterns, tracked .env and home presence only", () => {
-  const root = fixture("trap-c2", "repo");
+  const base = mkdtempSync(join(tempBase(), "canary-c2-"));
+  const root = join(base, "repo");
+  cpSync(fixture("trap-c2", "repo"), root, { recursive: true });
+  writeFileSync(join(root, "ignored.env"), "API_KEY=CANARY_SYNTHETIC_MARKER_7f3a_ignored\n");
+  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  // Git's index is authoritative even when a tracked file matches .gitignore.
+  execFileSync("git", ["add", "-f", "ignored.env"], { cwd: root });
+  // This secret-shaped file is present in the worktree, but not in the index.
+  writeFileSync(join(root, ".env.untracked"), "API_KEY=CANARY_SYNTHETIC_MARKER_7f3a_untracked\n");
   const home = fixture("trap-c2", "home");
 
-  withHome(home, () => {
-    const findings = checkCredentials(root);
+  try {
+    withHome(home, () => {
+      const findings = checkCredentials(root);
 
-    assert.deepEqual(summary(findings), [
-      "C2|aws-access-key-id|high|config/deploy.env|2",
-      "C2|generic-secret|high|.env|2",
-      "C2|home-credential|high|~/.aws/credentials|null",
-      "C2|home-credential|high|~/.kube/config|null",
-      "C2|home-credential|high|~/.netrc|null",
-      "C2|home-credential|high|~/.pgpass|null",
-      "C2|payment-key|critical|config/deploy.env|3",
-      "C2|private-key|critical|keys/private.pem|1",
-      "C2|tracked-env-file|high|.env|null",
-    ]);
-    assertNoLeak(findings, home);
-    assertStable(findings, checkCredentials, root);
+      assert.deepEqual(summary(findings), [
+        "C2|aws-access-key-id|high|config/deploy.env|2",
+        "C2|generic-secret|high|.env|2",
+        "C2|generic-secret|high|ignored.env|1",
+        "C2|home-credential|high|~/.aws/credentials|null",
+        "C2|home-credential|high|~/.config/gcloud|null",
+        "C2|home-credential|high|~/.kube/config|null",
+        "C2|home-credential|high|~/.netrc|null",
+        "C2|home-credential|high|~/.pgpass|null",
+        "C2|payment-key|critical|config/deploy.env|3",
+        "C2|private-key|critical|keys/private.pem|1",
+        "C2|tracked-env-file|high|.env|null",
+      ]);
+      assertNoLeak(findings, home);
+      assertStable(findings, checkCredentials, root);
 
-    for (const finding of findings.filter((item) => item.rule === "home-credential")) {
-      assert.ok(finding.path.startsWith("~/"), "home findings must use ~ paths");
-      assert.equal(finding.fix, null);
-    }
-  });
+      for (const finding of findings.filter((item) => item.rule === "home-credential")) {
+        assert.ok(finding.path.startsWith("~/"), "home findings must use ~ paths");
+        assert.equal(finding.fix, null);
+      }
+    });
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
 });
 
-test("C3 trap: unguarded deletes, missing set -u and escaping link", () => {
+test("C3 trap: unguarded deletes and missing set -u", () => {
   const base = mkdtempSync(join(tempBase(), "canary-wp03-"));
   const root = join(base, "repo");
-  const outside = join(base, "outside");
-  const link = join(root, "escape-link");
   cpSync(fixture("trap-c3"), root, { recursive: true });
-  mkdirSync(outside, { recursive: true });
-  symlinkSync(outside, link, process.platform === "win32" ? "junction" : "dir");
-
   try {
     const findings = checkDeletes(root);
 
     assert.deepEqual(summary(findings), [
-      "C3|link-escapes-repo|high|escape-link|null",
       "C3|missing-set-u|high|scripts/clean.sh|null",
       "C3|recursive-delete-unguarded-target|high|Makefile|2",
       "C3|recursive-delete-unguarded-target|high|package.json|4",
@@ -141,11 +151,62 @@ test("C3 trap: unguarded deletes, missing set -u and escaping link", () => {
     assertNoLeak(findings);
     assertStable(findings, checkDeletes, root);
   } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("C3 trap: an escaping junction or symlink is reported", (t) => {
+  const base = mkdtempSync(join(tempBase(), "canary-c3-escape-"));
+  const root = join(base, "repo");
+  const outside = join(base, "outside");
+  const link = join(root, "escape-link");
+  cpSync(fixture("trap-c3"), root, { recursive: true });
+  mkdirSync(outside, { recursive: true });
+
+  try {
     try {
-      rmSync(link, { force: true });
-    } catch {
-      // Windows junctions may need rmdir; the whole temp tree is removed below.
+      symlinkSync(outside, link, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      // Some restricted Windows runners deny link creation. Skip only this
+      // link-specific case; the fixture assertions above still run everywhere.
+      if ((error as NodeJS.ErrnoException).code === "EPERM") {
+        t.skip("environment denied junction/symlink creation with EPERM");
+        return;
+      }
+      throw error;
     }
+
+    const findings = checkDeletes(root);
+    assert.ok(summary(findings).includes("C3|link-escapes-repo|high|escape-link|null"));
+    assertNoLeak(findings);
+    assertStable(findings, checkDeletes, root);
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("C3 trap: an in-repository junction or symlink is not reported as escaping", (t) => {
+  const base = mkdtempSync(join(tempBase(), "canary-c3-internal-"));
+  const root = join(base, "repo");
+  const link = join(root, "internal-link");
+  cpSync(fixture("trap-c3"), root, { recursive: true });
+
+  try {
+    try {
+      symlinkSync(join(root, "scripts"), link, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "EPERM") {
+        t.skip("environment denied junction/symlink creation with EPERM");
+        return;
+      }
+      throw error;
+    }
+
+    const findings = checkDeletes(root);
+    assert.equal(summary(findings).some((item) => item.startsWith("C3|link-escapes-repo|")), false);
+    assertNoLeak(findings);
+    assertStable(findings, checkDeletes, root);
+  } finally {
     rmSync(base, { recursive: true, force: true });
   }
 });

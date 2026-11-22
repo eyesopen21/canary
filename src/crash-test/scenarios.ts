@@ -14,7 +14,6 @@ import type {
   CommandRunner,
   CommandSpec,
   CrashScenarioId,
-  EvaluationResult,
 } from "./types.ts";
 
 export const SCENARIO_IDS: readonly CrashScenarioId[] = ["delete", "database", "force-push"];
@@ -40,40 +39,23 @@ export const SCENARIO_META: Record<
   },
 };
 
-/** Exact block messages from docs/specs/policy.md, placeholders already filled. */
-export const FALLBACK_DECISIONS: Record<CrashScenarioId, EvaluationResult> = {
-  delete: {
-    decision: "block",
-    rule: "B1a",
-    message:
-      "Canary blocked a recursive delete. Danger: the target `$CRASH_TARGET` contains a variable or command substitution that Canary cannot resolve before it runs. Consequence: if it expands to an empty or wrong path, the command deletes files outside the intended folder, and they cannot be restored from this machine. Instead: use a literal path inside the project.",
-  },
-  database: {
-    decision: "block",
-    rule: "B2",
-    message:
-      "Canary blocked a destructive database command. Danger: `DATABASE_URL` points to a non-local host, which may be production. Consequence: this command DROPS tables, and the data cannot be recovered from this machine. Instead: point `DATABASE_URL` to a local database, or ask a human to run this command.",
-  },
-  "force-push": {
-    decision: "block",
-    rule: "B3",
-    message:
-      "Canary blocked a force push. Danger: this push rewrites history on `sandbox-origin`. Consequence: commits that exist only on `sandbox-origin` are lost for everyone who uses it. Instead: push without forcing, or ask a human to approve a force push.",
-  },
-};
-
 export const defaultCommandRunner: CommandRunner = (spec) => {
   const result = spawnSync(spec.file, spec.args, {
     cwd: spec.cwd,
     env: spec.env,
     timeout: spec.timeoutMs,
     encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
+    stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
+  const localTransportFailure =
+    spec.args.includes("push") &&
+    typeof result.stderr === "string" &&
+    result.stderr.includes("Could not read from remote repository");
   return {
     ok: result.status === 0,
     unavailable: result.error?.code === "ENOENT",
+    failure: localTransportFailure ? "LOCAL_GIT_TRANSPORT_FAILED" : undefined,
     stdout: typeof result.stdout === "string" ? result.stdout : undefined,
   };
 };
@@ -108,6 +90,7 @@ function command(
 
 function mustSucceed(outcome: CommandOutcome): void {
   if (outcome.unavailable) throw new GuardError("COMMAND_UNAVAILABLE");
+  if (outcome.failure) throw new GuardError(outcome.failure);
   if (!outcome.ok) throw new GuardError("COMMAND_FAILED");
 }
 
@@ -195,7 +178,14 @@ async function prepareForcePush({
       runner(command(git, [...identity, "commit", "--allow-empty", "-m", "base"], work, env)),
     );
     mustSucceed(
-      runner(command(git, ["remote", "add", "sandbox-origin", remote], work, env)),
+      runner(
+        command(
+          git,
+          ["remote", "add", "sandbox-origin", path.relative(work, remote).split(path.sep).join("/")],
+          work,
+          env,
+        ),
+      ),
     );
     mustSucceed(
       runner(command(git, ["push", "sandbox-origin", "HEAD:refs/heads/main"], work, env)),

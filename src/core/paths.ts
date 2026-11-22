@@ -38,7 +38,7 @@ function normalizeSeparators(value: string): string {
 
 function isInside(root: string, candidate: string): boolean {
   const relative = path.relative(root, candidate);
-  return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+  return relative !== "" && relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative);
 }
 
 function isFilesystemRoot(candidate: string): boolean {
@@ -49,7 +49,7 @@ function isFilesystemRoot(candidate: string): boolean {
 function isHome(candidate: string): boolean {
   const resolved = path.resolve(candidate);
   const home = path.resolve(os.homedir());
-  return normalizeSeparators(resolved).toLowerCase() === normalizeSeparators(home).toLowerCase();
+  return path.relative(home, resolved) === "";
 }
 
 function hasVariableOrSubstitution(raw: string): boolean {
@@ -107,6 +107,7 @@ export function checkDeleteTarget(
 
   const literal = normalizeSeparators(unquote(rawTarget));
   const base = baseDir ? path.resolve(baseDir) : root;
+  const canonicalRoot = realPathOrSelf(root);
 
   if (hasGlob(literal)) {
     const dirname = path.dirname(literal);
@@ -126,27 +127,26 @@ export function checkDeleteTarget(
       .map((entry) => path.resolve(directory, entry));
     if (matches.length === 0) return "B1b";
 
-    const directoryIsWholeRoot =
-      normalizeSeparators(directory).toLowerCase() === normalizeSeparators(root).toLowerCase();
+    const directoryIsWholeRoot = path.relative(root, directory) === "";
     if (directoryIsWholeRoot || isHome(directory) || isFilesystemRoot(directory)) {
       const visible = entries.filter((entry) => !entry.startsWith("."));
       if (visible.length > 0 && matches.length === visible.length) return "B1d";
     }
-    if (matches.some((match) => !isInside(root, match))) return "B1b";
+    if (matches.some((match) => !isInside(root, match) || !isInside(canonicalRoot, realPathOrSelf(match)))) return "B1b";
     return null;
   }
 
   const resolved = path.resolve(base, literal);
   if (isFilesystemRoot(resolved) || isHome(resolved)) return "B1d";
-  if (normalizeSeparators(resolved).toLowerCase() === normalizeSeparators(root).toLowerCase()) {
+  if (path.relative(root, resolved) === "") {
     return "B1d";
   }
   if (!isInside(root, resolved)) return "B1c";
 
   const real = realPathOrSelf(resolved);
-  if (normalizeSeparators(real).toLowerCase() === normalizeSeparators(root).toLowerCase()) {
+  if (path.relative(canonicalRoot, real) === "") {
     return "B1d";
   }
-  if (!isInside(root, real)) return "B1c";
+  if (!isInside(canonicalRoot, real)) return "B1c";
   return null;
 }

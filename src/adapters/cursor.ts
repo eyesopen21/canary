@@ -13,6 +13,7 @@
  */
 
 import type { Evaluator, RuleId } from "../contract.ts";
+import path from "node:path";
 import type { AdapterContext } from "./shared.ts";
 
 /** Fields documented for a Cursor preToolUse event [S9].
@@ -48,6 +49,23 @@ export type CursorAdapter = (
   context?: AdapterContext,
 ) => CursorOutput;
 
+function isWithin(root: string, directory: string): boolean {
+  const relative = path.relative(path.resolve(root), path.resolve(directory));
+  return relative === "" || (relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative));
+}
+
+/** Select a workspace root only when the event makes the choice unambiguous. */
+function cursorWorkspaceRoot(event: CursorEvent, workingDirectory: string | undefined): string | undefined {
+  const roots = (event.workspace_roots ?? []).filter(
+    (root) => typeof root === "string" && root.trim() !== "" && path.isAbsolute(root),
+  );
+  if (roots.length === 1) return roots[0];
+  if (!workingDirectory || roots.length < 2) return undefined;
+
+  const containing = roots.filter((root) => isWithin(root, workingDirectory));
+  return containing.length === 1 ? containing[0] : undefined;
+}
+
 export function createCursorAdapter(
   evaluator: Evaluator,
   options: CursorAdapterOptions = {},
@@ -58,13 +76,14 @@ export function createCursorAdapter(
       return { permission: "allow" };
     }
 
-    // `working_directory` is Cursor's documented per-tool working directory
-    // [S9]; fall back to it when the top-level `cwd` is absent.
-    const cwd = event.cwd ?? event.tool_input?.working_directory;
+    // Cursor documents working_directory as the Shell tool's execution
+    // directory [S9]; it takes precedence over the hook process cwd.
+    const cwd = event.tool_input?.working_directory ?? event.cwd;
+    const projectRoot = context.projectRoot ?? cursorWorkspaceRoot(event, cwd);
     const result = evaluator({
       command,
       ...(typeof cwd === "string" ? { cwd } : {}),
-      ...(context.projectRoot ? { projectRoot: context.projectRoot } : {}),
+      ...(typeof projectRoot === "string" ? { projectRoot } : {}),
     });
 
     if (result.decision === "block") {

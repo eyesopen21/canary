@@ -19,7 +19,7 @@ import type { AdapterContext } from "./shared.ts";
 
 export interface OpenCodePermissionEvent {
   action: string;
-  resources?: string | string[];
+  resources?: string | readonly string[];
   metadata?: Record<string, unknown>;
   effect?: "allow" | "ask" | "deny";
   message?: string;
@@ -30,7 +30,7 @@ export type OpenCodeAdapter = (
   context?: AdapterContext,
 ) => OpenCodePermissionEvent;
 
-function commandText(resources: string | string[] | undefined): string {
+function commandText(resources: string | readonly string[] | undefined): string {
   if (typeof resources === "string") return resources;
   if (Array.isArray(resources)) return resources.join("\n");
   return "";

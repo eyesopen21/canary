@@ -1,5 +1,6 @@
 {
   "name": "canary",
   "description": "Blocks irreversible shell commands before an agent runs them.",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "hooks": "./hooks/claude-code.json"
 }

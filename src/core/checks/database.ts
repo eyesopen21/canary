@@ -1,4 +1,4 @@
-import { lstatSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import type { Check, CheckFinding, Severity } from "../../contract.ts";
 
@@ -48,22 +48,16 @@ function traverse(root: string): Tree {
     }
     for (const entry of entries) {
       const full = join(dir, entry.name);
-      let stat;
-      try {
-        stat = lstatSync(full);
-      } catch {
-        continue;
-      }
       // Junctions are reported as symlinks by Node on Windows. Never follow
       // a link while walking: it can point outside the scanned repository.
-      if (stat.isSymbolicLink()) {
+      if (entry.isSymbolicLink()) {
         links.push(full);
         continue;
       }
-      if (stat.isDirectory()) {
+      if (entry.isDirectory()) {
         if (entry.name === ".git" || entry.name === "node_modules") continue;
         stack.push(full);
-      } else if (stat.isFile()) {
+      } else if (entry.isFile()) {
         files.push(full);
       }
     }

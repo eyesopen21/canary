@@ -4,7 +4,7 @@
 | --- | --- |
 | Version | 0.1 (draft) |
 | Date | 2026-11-22 |
-| Status | Draft. No requirement is implemented yet. |
+| Status | Draft. A local implementation and automated test suite exist. MVP acceptance is incomplete; acceptance criteria are not marked complete, and live-agent verification remains outstanding. |
 | Scope of this version | MVP (P0) in full; P1 and P2 listed as roadmap |
 
 The structure of this document follows the SRS content outline of ISO/IEC/IEEE 29148:2018 [S19]. The outline was not checked clause by clause against the full standard ([Q17](open-questions.md#open-questions-about-the-product)).
@@ -142,7 +142,7 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | ID | Requirement | Source |
 | --- | --- | --- |
 | CAN-I-08 | `canary scan` MUST write only `canary/findings.json` and, when asked, `canary/badge.svg`, inside the scanned repository. | S24 |
-| CAN-I-09 | `canary init` MUST write only the hook configuration file for the chosen agent and MUST show the full diff before writing. Files per agent: `.claude/settings.json` or the plugin's `hooks/hooks.json` [S1]; `.codex/hooks.json` [S8]; `.cursor/hooks.json` [S9]; `.gemini/settings.json` [S10]; `.opencode/plugins/canary/` and `opencode.jsonc` [S13][S16]. | S1, S8, S9, S10, S13, S16 |
+| CAN-I-09 | `canary init` MUST show the full diff of Canary configuration changes before writing and MUST write only configuration files for the selected agent. Existing unchanged values MUST be omitted from the preview; any existing sensitive values MUST be redacted. Generated project paths: `.claude/settings.json` [S1]; `.codex/hooks.json` [S8]; `.cursor/hooks.json` [S9]; `.gemini/settings.json` [S10]; `.opencode/plugins/canary/` and `opencode.jsonc` [S13][S16]. The plugin/extension manifests shipped in the package use `hooks/claude-code.json`, `hooks/codex.json`, and Gemini's `hooks/hooks.json`. | S1, S8, S9, S10, S13, S16 |
 
 ### 3.2 Functional requirements
 
@@ -152,7 +152,7 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | --- | --- | --- | --- |
 | CAN-F-01 | `canary scan` MUST run checks C1, C2, C3, C8, and C9 (defined in CAN-F-01.1 to CAN-F-01.5) on the repository and the local environment. | P0 | S24 checks 1, 2, 3, 8, 9 |
 | CAN-F-01.1 | **C1, non-local test database.** The scanner MUST report each test, development, or preview configuration that sets a database URL whose host is not local (A9). Severity is **critical** when a test or setup script in the same repository runs `drop`, `truncate`, `reset`, or `migrate`; otherwise **high**. | P0 | S24 check 1 |
-| CAN-F-01.2 | **C2, readable credentials.** The scanner MUST report (a) files tracked by Git that contain a credential pattern from the pattern list, (b) tracked `.env` files other than `.env.example`, and (c) the presence, not the content, of `~/.aws/credentials`, `~/.kube/config`, the gcloud credential directory, `~/.netrc`, and `~/.pgpass`. Severity is **critical** for (a) when the pattern is a live payment key or a private key, **high** otherwise. | P0 | S24 check 2 |
+| CAN-F-01.2 | **C2, readable credentials.** The scanner MUST report (a) files tracked by Git that contain a credential pattern from the pattern list, (b) tracked `.env` files other than `.env.example`, and (c) the presence, not the content, of `~/.aws/credentials`, `~/.kube/config`, the gcloud configuration directory (`~/.config/gcloud` by default on Unix-like systems; the platform default or `CLOUDSDK_CONFIG` override where applicable [S28]), `~/.netrc`, and `~/.pgpass`. Severity is **critical** for (a) when the pattern is a live payment key or a private key, **high** otherwise. | P0 | S24 check 2, S28 |
 | CAN-F-01.3 | **C3, unguarded recursive delete.** The scanner MUST report each recursive delete in repository scripts (`package.json` scripts, `*.sh`, `*.ps1`, `Makefile`) whose target contains a variable, a command substitution, or a glob, unless the variable uses the `${VAR:?}` form. It MUST report shell scripts that perform such a delete without `set -u`, and symlinks or Windows junctions inside the repository that resolve outside it. Severity **high**. | P0 | S24 check 3, CAN-N-03 |
 | CAN-F-01.4 | **C8, unpinned or bypassing agent configuration.** The scanner MUST report MCP server entries without an exact version (for example `@latest`, a bare package name, or `npx -y <package>` with no version) in the MCP configuration files of the five agents; repository files that enable a permission-bypass mode whose name is documented by the agent (for Claude Code: `--dangerously-skip-permissions` and `permissions.defaultMode: "bypassPermissions"` [S3]; for Codex: `--dangerously-bypass-hook-trust` [S8]); and invisible or bidirectional Unicode control characters in `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/`, and `.claude/rules/`. Severity **high** for hidden Unicode and bypass flags, **medium** for unpinned servers. | P0 | S24 check 8, S7 |
 | CAN-F-01.5 | **C9, agent in CI on untrusted input.** The scanner MUST report each GitHub Actions workflow that uses the `pull_request_target` trigger, and each workflow triggered by `issues`, `issue_comment`, or `pull_request_review_comment` that runs a step from the configurable list of agent actions while it has access to secrets or a `permissions` block that grants write access or is missing. Severity **critical** for `pull_request_target` combined with a checkout of the pull request head; **high** otherwise. | P0 | S24 check 9 |
@@ -168,7 +168,7 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | CAN-F-05 | Every warn and block message MUST name the danger and its consequence, using the exact templates in [policy.md](specs/policy.md#message-text). | P0 | S24 |
 | CAN-F-06 | When the hook cannot resolve the target of a recursive delete (empty or unset variable, command substitution, symlink or junction, glob that expands outside the project root, or a path outside the project root), it MUST block. | P0 | S24, policy B1 |
 | CAN-F-19 | Canary MUST provide hook adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode, each using only the interface documented by that agent (section 3.1.2). | P0 | Maintainer input, [ADR-0005](decisions/0005-shared-core-with-thin-agent-adapters.md) |
-| CAN-F-21 | `canary init` MUST enable the agent's fail-closed setting where one is documented: `onFailure: "block"` for Claude Code [S1] and `failClosed: true` for Cursor [S9]. For agents without such a setting (Codex [S8], Gemini CLI [S10]), `init` MUST print that a hook failure lets the action run. | P0 | S1, S8, S9, S10 |
+| CAN-F-21 | `canary init` MUST enable the agent's documented fail-closed setting where available: `onFailure: "block"` for Claude Code [S1] and `failClosed: true` for Cursor [S9]. For Codex [S8] and Gemini CLI [S10], `init` MUST state that hook failures can let the action run. For OpenCode, `init` MUST state that fail-closed behavior is unverified and must not claim a hook failure blocks the action. These are configuration/documentation requirements, not evidence of live-agent verification. | P0 | S1, S8, S9, S10, S14 |
 
 #### Crash test
 
@@ -188,8 +188,8 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 
 | ID | Requirement | Verification |
 | --- | --- | --- |
-| CAN-N-05 | The hook SHOULD answer in under 100 ms per command on a typical laptop. This is an initial target to be measured. | Benchmark |
-| CAN-N-06 | `canary scan` SHOULD finish in under 10 s on a repository of 5,000 tracked files. This is an initial target to be measured. | Benchmark |
+| CAN-N-05 | The hook SHOULD answer in under 100 ms per command on a typical laptop. This is an initial target; a restricted Windows benchmark recorded a 535 ms median from the source checkout and 192 ms for the packaged JavaScript entry point. Starting an empty Node process took a 119 ms median in the same environment. | Benchmark; current measurement is not a cross-platform result |
+| CAN-N-06 | `canary scan` SHOULD finish in under 10 s on a repository of 5,000 tracked files. A measured run completed in 9.47 s after optimization; repeatable cross-platform measurement is outstanding. | Benchmark; current measurement is not a cross-platform result |
 
 ### 3.5 Logical data: `findings.json`
 
@@ -232,7 +232,8 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | CAN-C-01 | Implementation language: TypeScript on Node.js (A5). | Maintainer input |
 | CAN-C-02 | The decision path (checks, policy, score) MUST NOT call an LLM. | [ADR-0001](decisions/0001-deterministic-core-without-llm.md) |
 | CAN-C-03 | Each agent adapter MUST be a thin translation layer; policy logic MUST live in the shared core. | [ADR-0005](decisions/0005-shared-core-with-thin-agent-adapters.md) |
-| CAN-C-04 | The repository layout for packaging MUST follow each agent's documented plugin or extension layout: `.claude-plugin/plugin.json` and `hooks/hooks.json` [S4]; `.codex-plugin/plugin.json` [S8]; `gemini-extension.json` with hooks in `hooks/hooks.json` [S12]. | S4, S8, S12, A1 |
+| CAN-C-04 | The package MUST use the documented agent package layouts: `.claude-plugin/plugin.json` referencing `hooks/claude-code.json` [S4]; `.codex-plugin/plugin.json` referencing `hooks/codex.json` [S8]; and `gemini-extension.json` with its hook definition in `hooks/hooks.json` [S12]. Cursor and OpenCode project configurations are produced by `canary init` at the paths in CAN-I-09 [S9][S13][S16]. | S4, S8, S9, S12, S13, S16 |
+| CAN-C-05 | The package MUST include the built JavaScript entry point, and the bin and every command hook MUST run `dist/cli/entry.js`. The source entry MAY run only when `CANARY_DEV=1` is explicitly set. GitHub marketplace installs MUST NOT depend on an install-time build step. | ADR-0007; S4, S8, S12 |
 
 ### 3.7 Software system attributes
 
@@ -240,7 +241,7 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | --- | --- | --- |
 | CAN-N-01 | The scanner MUST NOT open network connections and MUST NOT use credentials. | Run with the network blocked; the test fails on any connection attempt |
 | CAN-N-02 | Installation MUST need one command and no native dependencies. | Clean install on macOS, Linux, and Windows |
-| CAN-N-03 | Canary MUST work on macOS, Linux, and Windows. On Windows, symlinks and junctions MUST count in C3 and in policy B1. Paths from Claude Code arrive with backslashes on Windows and MUST be normalized before comparison [S1]. | Tests on the three systems |
+| CAN-N-03 | Canary MUST work on macOS, Linux, and Windows. On Windows, symlinks and junctions MUST count in C3 and in policy B1. Paths from Claude Code arrive with backslashes on Windows and MUST be normalized before comparison [S1]. | CI matrix covers Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest; matrix presence is not a record that this run passed. |
 | CAN-N-04 | Results MUST be deterministic: the same repository gives the same `findings.json`. | Two runs, byte comparison |
 | CAN-N-08 | The README MUST include install per agent, a demo, the score, and a table of what Canary does not protect. | Manual review |
 | CAN-N-09 | The license MUST be MIT. | `LICENSE` file |
@@ -253,6 +254,8 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 
 ### 4.1 Verification methods
 
+The latest reported local test run has 130 passing tests, 4 skips caused by unavailable sandbox capabilities, and no failures (134 tests total). The network-disabled integration check passed. A packaged offline smoke verified the five `init` target paths and ran the generated Cursor hook through the installed `PATH` against synthetic input, where it returned deny. A GitHub Actions matrix for Ubuntu, macOS, and Windows with Node.js 22.22.0 and latest has been added, but that matrix has not yet run. These results do not establish all MVP acceptance criteria, and live-agent checks remain outstanding for all five integrations.
+
 | ID | Method | Covers |
 | --- | --- | --- |
 | CAN-T-01 | **Trap repositories.** `fixtures/` holds one repository per P0 check that must produce exactly the expected findings, plus one clean repository that must produce none. | CAN-F-01.x, CAN-F-02, CAN-F-03 |
@@ -263,6 +266,7 @@ The fields below are the only fields Canary reads from or writes to each agent. 
 | CAN-T-06 | **Isolation check.** The crash test runs inside a watcher that records every file write; the test fails on any write outside the temporary directory. | CAN-F-07 |
 | CAN-T-07 | **Determinism.** Two scans of each fixture produce byte-identical `findings.json`. | CAN-N-04, CAN-D-01 |
 | CAN-T-08 | **Offline.** The scan runs with networking disabled. | CAN-N-01 |
+| CAN-T-09 | **Archived package runtime.** Create a copy with `git archive HEAD`, run a packaged command hook from that copy, and reject any attempt to load a `.ts` module. | CAN-C-05 |
 
 ### 4.2 MVP acceptance criteria
 
@@ -302,29 +306,30 @@ These requirements come from the design notes [S24]. They are not specified in d
 
 ## 6. Traceability
 
-| Requirement | Source | Design | Verification | Acceptance |
-| --- | --- | --- | --- | --- |
-| CAN-F-01, CAN-F-01.1 to .5 | S24 checks 1, 2, 3, 8, 9 | ADR-0001 | CAN-T-01, CAN-T-08 | AC-1 |
-| CAN-F-02 | S24 | ADR-0003 | CAN-T-01, CAN-T-02 | AC-1, AC-2 |
-| CAN-F-03 | S24, A8 | ADR-0001 | CAN-T-01, CAN-T-07 | AC-1, AC-8 |
-| CAN-F-04 | S24 | policy.md, ADR-0002 | CAN-T-03 | AC-3 |
-| CAN-F-05 | S24 | policy.md | CAN-T-03 | AC-3 |
-| CAN-F-06 | S24 | policy.md B1 | CAN-T-03 | AC-3 |
-| CAN-F-07 | S24 | ADR-0004 | CAN-T-06 | AC-5 |
-| CAN-F-08 | S24 | ADR-0003 | CAN-T-02 | AC-2 |
-| CAN-F-19 | Maintainer input, S1, S8, S9, S10, S11, S14 | ADR-0005, agent-adapters.md | CAN-T-04, CAN-T-05 | AC-3, AC-4 |
-| CAN-F-21 | S1, S8, S9, S10 | ADR-0002, agent-adapters.md | CAN-T-04 | AC-7 |
-| CAN-I-01 to CAN-I-04 | S24, A4 | — | CAN-T-04 | AC-6 |
-| CAN-I-05 to CAN-I-07 | S1, S9 | agent-adapters.md | CAN-T-04 | AC-3 |
-| CAN-I-08, CAN-I-09 | S1, S8, S9, S10, S13, S16 | — | CAN-T-06 | AC-5 |
-| CAN-D-01 to CAN-D-03 | ADR-0001, ADR-0003 | ADR-0003 | CAN-T-02, CAN-T-07 | AC-2, AC-8 |
-| CAN-N-01 | S24 | ADR-0001 | CAN-T-08 | AC-1 |
-| CAN-N-02 | S24 | — | Clean install | AC-6 |
-| CAN-N-03 | S24, S1 | — | Tests on three systems | AC-1, AC-3 |
-| CAN-N-04 | S24 | ADR-0001 | CAN-T-07 | AC-8 |
-| CAN-N-05, CAN-N-06 | S24 | — | Benchmark | — |
-| CAN-N-08 | S24 | README | Manual review | AC-7 |
-| CAN-N-10, CAN-N-11 | S24, S9 | ADR-0003 | CAN-T-02 | AC-2 |
+| Requirement | Source | Design | OpenSpec capability | Verification | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| CAN-F-01, CAN-F-01.1 to .5 | S24 checks 1, 2, 3, 8, 9 | ADR-0001 | — | CAN-T-01, CAN-T-08 | AC-1 |
+| CAN-F-02 | S24 | ADR-0003 | — | CAN-T-01, CAN-T-02 | AC-1, AC-2 |
+| CAN-F-03 | S24, A8 | ADR-0001 | — | CAN-T-01, CAN-T-07 | AC-1, AC-8 |
+| CAN-F-04 | S24 | policy.md, ADR-0002 | [hook-policy](../openspec/specs/hook-policy/spec.md) | CAN-T-03 | AC-3 |
+| CAN-F-05 | S24 | policy.md | [hook-policy](../openspec/specs/hook-policy/spec.md) | CAN-T-03 | AC-3 |
+| CAN-F-06 | S24 | policy.md B1 | [hook-policy](../openspec/specs/hook-policy/spec.md) | CAN-T-03 | AC-3 |
+| CAN-F-07 | S24 | ADR-0004 | — | CAN-T-06 | AC-5 |
+| CAN-F-08 | S24 | ADR-0003 | — | CAN-T-02 | AC-2 |
+| CAN-F-19 | Maintainer input, S1, S8, S9, S10, S11, S14 | ADR-0005, agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04, CAN-T-05 | AC-3, AC-4 |
+| CAN-C-05 | ADR-0007, S4, S8, S12 | ADR-0007 | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-09 | — |
+| CAN-F-21 | S1, S8, S9, S10, S14 | ADR-0002, agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04 | AC-7 |
+| CAN-I-01 to CAN-I-04 | S24, A4 | — | — | CAN-T-04 | AC-6 |
+| CAN-I-05 to CAN-I-07 | S1, S9 | agent-adapters.md | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-04 | AC-3 |
+| CAN-I-08, CAN-I-09 | S1, S8, S9, S10, S13, S16 | — | [agent-adapters](../openspec/specs/agent-adapters/spec.md) | CAN-T-06 | AC-5 |
+| CAN-D-01 to CAN-D-03 | ADR-0001, ADR-0003 | ADR-0003 | — | CAN-T-02, CAN-T-07 | AC-2, AC-8 |
+| CAN-N-01 | S24 | ADR-0001 | — | CAN-T-08 | AC-1 |
+| CAN-N-02 | S24 | — | — | Clean install | AC-6 |
+| CAN-N-03 | S24, S1 | — | — | Tests on three systems | AC-1, AC-3 |
+| CAN-N-04 | S24 | ADR-0001 | — | CAN-T-07 | AC-8 |
+| CAN-N-05, CAN-N-06 | S24 | — | — | Benchmark | — |
+| CAN-N-08 | S24 | README | — | Manual review | AC-7 |
+| CAN-N-10, CAN-N-11 | S24, S9 | ADR-0003 | — | CAN-T-02 | AC-2 |
 
 ---
 

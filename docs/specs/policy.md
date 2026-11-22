@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Draft for the MVP (P0). Not implemented. |
+| Status | Implemented locally. MVP acceptance is incomplete; see the SRS for verification criteria and the remaining live-agent check. |
 | Requirements | CAN-F-04, CAN-F-05, CAN-F-06 in the [SRS](../SRS.md) |
 | Date | 2026-11-22 |
 
@@ -166,7 +166,7 @@ Every message MUST use the template below for its rule, with placeholders replac
 
 ## Local log
 
-The hook MAY append one line per warn or block to `canary/hook.log` in the project root, with: time, agent name, rule ID, and decision. It MUST NOT write the command text, placeholders other than `{token}`, environment values, or user identity fields.
+The Cursor adapter appends one JSON line for a warning to `canary/hook.log` in the project root. It records the rule ID when available and the decision only. It MUST NOT write the command text, placeholders, environment values, or user identity fields. Other adapters do not write hook log entries.
 
 ## Examples
 

@@ -1,7 +1,8 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { delimiter, dirname, isAbsolute, join, relative, sep } from "node:path";
 import type { Check, CheckFinding, Severity } from "../../contract.ts";
-import { readText, repoPath, stableId, walkFiles } from "./database.ts";
+import { readText, stableId } from "./database.ts";
 
 // ---------------------------------------------------------------------------
 // C2: readable credentials
@@ -56,41 +57,59 @@ function homeDirectory(): string {
   );
 }
 
-function loadIgnorePatterns(root: string): string[] {
-  const text = readText(join(root, ".gitignore"));
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"));
-}
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/** A small .gitignore subset: exact names, dirs, * wildcards and ! negation. */
-function isIgnored(relativePath: string, patterns: string[]): boolean {
-  const path = relativePath.replace(/\\/g, "/");
-  let ignored = false;
-  for (const raw of patterns) {
-    const negated = raw.startsWith("!");
-    const pattern = (negated ? raw.slice(1) : raw).replace(/^\//, "");
-    if (pattern === "") continue;
-    const directoryOnly = pattern.endsWith("/");
-    const cleaned = pattern.replace(/\/$/, "");
-    let matched = false;
-    if (cleaned.includes("*")) {
-      const body = cleaned.split("*").map(escapeRegex).join(".*");
-      matched = new RegExp(`(?:^|/)${body}${directoryOnly ? "/.*$" : "$"}`).test(path);
-    } else {
-      matched =
-        path === cleaned ||
-        path.startsWith(`${cleaned}/`) ||
-        (!directoryOnly && path.endsWith(`/${cleaned}`));
-    }
-    if (matched) ignored = !negated;
+function gcloudDirectory(home: string): string {
+  const appData = process.env.APPDATA;
+  if (!process.env.CANARY_HOME) {
+    if (process.env.CLOUDSDK_CONFIG) return process.env.CLOUDSDK_CONFIG;
+    if (process.platform === "win32" && appData) return join(appData, "gcloud");
   }
-  return ignored;
+  return join(home, ".config", "gcloud");
+}
+
+function isWithinRoot(root: string, directory: string): boolean {
+  try {
+    const local = relative(root, realpathSync.native(directory));
+    return local !== ".." && !local.startsWith(".." + sep) && !isAbsolute(local);
+  } catch {
+    return false;
+  }
+}
+
+function isTrackedRegularFile(file: string): boolean {
+  try {
+    return lstatSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function trackedFiles(root: string): string[] {
+  try {
+    const gitName = process.platform === "win32" ? "git.exe" : "git";
+    const git = (process.env.PATH ?? "").split(delimiter)
+      .filter(isAbsolute).map((directory) => join(directory, gitName)).find(existsSync);
+    if (!git) throw new Error("Git is unavailable.");
+    return execFileSync(git, ["-c", "core.fsmonitor=false", "-C", root, "ls-files", "--deduplicate", "-z"], {
+      env: {
+        PATH: process.env.PATH,
+        SystemRoot: process.env.SystemRoot,
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_OPTIONAL_LOCKS: "0",
+        GIT_NO_LAZY_FETCH: "1",
+        GIT_TERMINAL_PROMPT: "0",
+        GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null",
+      },
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .split("\0")
+      .filter((path) => path.length > 0)
+      .sort();
+  } catch {
+    if (existsSync(join(root, ".git"))) throw new Error("Unable to read the Git index.");
+    return [];
+  }
 }
 
 function isPlaceholder(value: string): boolean {
@@ -135,14 +154,11 @@ function credentialFinding(
 }
 
 export const checkCredentials: Check = (root) => {
-  const files = walkFiles(root);
-  const ignore = loadIgnorePatterns(root);
   const findings: CheckFinding[] = [];
+  const canonicalRoot = realpathSync.native(root);
+  const allowedDirectories = new Map<string, boolean>();
 
-  for (const file of files) {
-    const path = repoPath(root, file);
-    if (path.startsWith("../") || isIgnored(path, ignore)) continue;
-
+  for (const path of trackedFiles(canonicalRoot)) {
     const base = path.slice(path.lastIndexOf("/") + 1);
     const isEnvFile = base === ".env" || base.startsWith(".env.");
     if (isEnvFile && base !== ".env.example") {
@@ -160,6 +176,13 @@ export const checkCredentials: Check = (root) => {
       });
     }
 
+    const file = join(canonicalRoot, ...path.split("/"));
+    const directory = dirname(file);
+    if (!allowedDirectories.has(directory)) {
+      allowedDirectories.set(directory, isWithinRoot(canonicalRoot, directory));
+    }
+    if (!allowedDirectories.get(directory) || !isTrackedRegularFile(file)) continue;
+
     const lines = readText(file).split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
       const match = matchCredentialPattern(lines[index]);
@@ -172,8 +195,12 @@ export const checkCredentials: Check = (root) => {
 
   const home = homeDirectory();
   if (home !== "") {
-    for (const relative of HOME_FILES) {
-      if (!existsSync(join(home, relative))) continue;
+    const locations: Array<[label: string, location: string]> = HOME_FILES.map(
+      (name) => [name, join(home, name)],
+    );
+    locations.push([".config/gcloud", gcloudDirectory(home)]);
+    for (const [relative, location] of locations) {
+      if (!existsSync(location)) continue;
       // Always render with ~: no absolute path or home value reaches output.
       const path = `~/${relative}`;
       findings.push({

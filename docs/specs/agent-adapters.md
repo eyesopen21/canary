@@ -2,14 +2,14 @@
 
 | | |
 | --- | --- |
-| Status | Draft for the MVP (P0). Not implemented. Not tested against live agents. |
+| Status | Implemented in this repository. Adapter contracts and package layouts are covered by repository tests, but no adapter has been verified in a live session with its agent. MVP acceptance is incomplete. |
 | Requirements | CAN-F-19, CAN-F-21, CAN-I-03, CAN-I-05 to CAN-I-07 in the [SRS](../SRS.md) |
 | Decision | [ADR-0005](../decisions/0005-shared-core-with-thin-agent-adapters.md) |
 | Date | 2026-11-22 |
 
 Each adapter reads one hook event from its agent, passes the shell command, the working directory, and the project root to the core, and writes the core's decision back in the agent's format. The rules themselves are in [policy.md](policy.md).
 
-Every field name, event name, and file path below is copied from the cited documentation. If a name is not in a cited source, it is not used. Every example below is a design; none has been run against a live agent yet (CAN-T-05).
+Every field name and event name below is copied from the cited documentation. The repository has local adapter and packaging implementations, but live behavior remains unverified for all five agents (CAN-T-05). Do not treat config generation or unit tests as proof that an agent loads or enforces its hook.
 
 ## Summary
 
@@ -19,13 +19,19 @@ Every field name, event name, and file path below is copied from the cited docum
 | Event | `PreToolUse` [S1] | `PreToolUse` [S8] | `preToolUse` [S9] | `BeforeTool` [S11] | `ctx.permission.hook("evaluate", ...)` [S14] |
 | Matcher | `Bash\|PowerShell` [S1] | `^Bash$` [S8] | `Shell` [S9] | `run_shell_command` [S11][S25] | `event.action === "shell"` [S14][S16] |
 | Command field | `tool_input.command` [S1] | `tool_input.command` [S8] | `tool_input.command` [S9] | `tool_input.command` [S25] | `event.resources` [S14] |
-| Fail closed on hook failure | `onFailure: "block"` [S1] | Not available [S8] | `failClosed: true` [S9] | Not available [S10] | Not verified (Q5) |
-| Config file written by `init` | Plugin `hooks/hooks.json` or `.claude/settings.json` [S1] | Plugin `hooks/hooks.json` or `.codex/hooks.json` [S8] | `.cursor/hooks.json` [S9] | Extension `hooks/hooks.json` or `.gemini/settings.json` [S10][S12] | `.opencode/plugins/canary/` and `opencode.jsonc` [S13][S16] |
+| Fail closed on hook failure | `onFailure: "block"` [S1] | Not available [S8] | `failClosed: true` [S9] | Not available [S10] | Not verified (Q19) |
+| Config file written by `init` | `.claude/settings.json` [S1] | `.codex/hooks.json` [S8] | `.cursor/hooks.json` [S9] | `.gemini/settings.json` [S10] | `.opencode/plugins/canary/` and `opencode.jsonc` [S13][S16] |
 | Barrier layer `init` proposes | Permission deny rules [S2] | — | — | Policy engine `deny` rules [S26] | Permission `deny` rules [S16] |
+
+## Built JavaScript runtime
+
+The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every checked-in command hook invokes `node` with the built `dist/cli/entry.js`. `canary init` writes an absolute path to that built entry in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`.
+
+The Claude Code, Codex, and Gemini CLI GitHub install instructions define package files and hook locations but no build-on-install step [S4][S8][S12]. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
 ## Claude Code
 
-**Configuration.** As a plugin, Canary ships `hooks/hooks.json` at the plugin root [S4]. The exec form with `node` and a script path works on every platform, including Windows, where `.cmd` shims cannot be spawned without a shell [S1].
+**Configuration.** The package manifest `.claude-plugin/plugin.json` points to `hooks/claude-code.json`, which registers the `PreToolUse` hook. `canary init --agent claude-code` writes `.claude/settings.json` in a project. Both invoke Node with the built `dist/cli/entry.js`; the package commits `dist/` because GitHub marketplace installs do not run a Canary build step (see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md)). The generated project configuration stores the absolute path to that build.
 
 ```json
 {
@@ -37,7 +43,7 @@ Every field name, event name, and file path below is copied from the cited docum
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/hook.js", "--agent", "claude-code"],
+            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/cli/entry.js", "hook", "--agent", "claude-code"],
             "timeout": 10,
             "onFailure": "block"
           }
@@ -49,6 +55,7 @@ Every field name, event name, and file path below is copied from the cited docum
 ```
 
 - The matcher must include `PowerShell`: on Windows without Git Bash, Claude Code does not register the `Bash` tool, and a hook that matches only `Bash` never fires [S1].
+- `command` plus `args` uses exec form: Claude Code spawns `node` directly and passes the build path as one argument, including on Windows [S1].
 - `onFailure: "block"` makes a crash, a timeout, or invalid output block the call. It requires Claude Code v2.1.295 or later [S1].
 - Hooks in settings files do not run in an interactive session until the user accepts the workspace trust dialog [S1].
 
@@ -81,7 +88,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
 
 ## Codex
 
-**Configuration.** As a plugin, Codex reads `hooks/hooks.json` from the plugin root by default, or the `hooks` entry of `.codex-plugin/plugin.json` [S8]. The project-level alternative is `.codex/hooks.json` in a trusted project [S8].
+**Configuration.** The package manifest `.codex-plugin/plugin.json` points to `hooks/codex.json`. `canary init --agent codex` writes `.codex/hooks.json` in the project [S8]. The packaged hook invokes `node` with `${PLUGIN_ROOT}/dist/cli/entry.js`; the generated project command invokes Node with an absolute path to the installed package's same build.
 
 ```json
 {
@@ -92,7 +99,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$PLUGIN_ROOT/dist/hook.js\" --agent codex",
+            "command": "node \"${PLUGIN_ROOT}/dist/cli/entry.js\" hook --agent codex",
             "timeout": 10,
             "statusMessage": "Canary: checking command"
           }
@@ -142,7 +149,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
   "hooks": {
     "preToolUse": [
       {
-        "command": "node .cursor/hooks/canary-hook.js --agent cursor",
+        "command": "node \"<absolute Canary package path>/dist/cli/entry.js\" hook --agent cursor",
         "matcher": "Shell",
         "timeout": 10,
         "failClosed": true
@@ -174,7 +181,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## Gemini CLI
 
-**Configuration.** As an extension, hooks live in `hooks/hooks.json` in the extension directory, not in `gemini-extension.json` [S12]. `${extensionPath}` is substituted in that file [S12]. The project-level alternative is `.gemini/settings.json` [S10].
+**Configuration.** As an extension, hooks live in `hooks/hooks.json` in the extension directory, not in `gemini-extension.json` [S12]. `${extensionPath}` is substituted in that file [S12]. The project-level alternative is `.gemini/settings.json` [S10]. The extension includes committed build output because Gemini CLI copies the extension on install and does not run a Canary build step [S12]. `canary init` writes a project command with an absolute path to the installed package build.
 
 ```json
 {
@@ -186,7 +193,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
           {
             "name": "canary",
             "type": "command",
-            "command": "node \"${extensionPath}${/}dist${/}hook.js\" --agent gemini-cli",
+            "command": "node \"${extensionPath}${/}dist${/}cli${/}entry.js\" hook --agent gemini-cli",
             "timeout": 10000,
             "description": "Blocks irreversible shell commands"
           }
@@ -222,33 +229,9 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## OpenCode
 
-**Configuration.** `canary init --agent opencode` writes a plugin directory under `.opencode/plugins/`, which OpenCode loads automatically [S13], and adds `deny` permission rules to `opencode.jsonc` [S16].
+**Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds permission rules to `opencode.jsonc` [S13][S16]. The generated plugin starts Node in exec form with the absolute path to `dist/cli/entry.js`, passing `hook --agent opencode` as separate arguments.
 
-```ts
-// .opencode/plugins/canary/index.ts (design sketch)
-import { Plugin } from "@opencode/plugin"
-import { evaluate } from "@eyesopen21/canary/core"
-
-export default Plugin.define({
-  id: "canary",
-  async setup(ctx) {
-    await ctx.permission.hook("evaluate", async (event) => {
-      if (event.action !== "shell") return
-      const result = evaluate({
-        commands: event.resources,
-        projectRoot: ctx.location.directory,
-      })
-      if (result.decision === "block") {
-        event.effect = "deny"
-        event.message = result.message
-      } else if (result.decision === "warn") {
-        event.effect = "ask"
-        event.message = result.message
-      }
-    })
-  },
-})
-```
+The generated plugin calls the built entry with `execFileSync(process.execPath, [buildPath, "hook", "--agent", "opencode"], ...)` and applies a returned `ask` or `deny` decision to the V2 permission event. This keeps policy in the shared core and avoids a `canary` executable or Windows `.cmd` shim on `PATH`.
 
 - `evaluate` hooks run for `allow` and `ask` decisions; an explicit configured `deny` is final and does not invoke the hook [S14].
 - A hook may change `effect` to `allow`, `ask`, or `deny`, and `message` becomes the denial reason [S14].
@@ -256,7 +239,7 @@ export default Plugin.define({
 
 **Barrier layer.** `init` adds rules such as `{ "action": "shell", "resource": "git push --force *", "effect": "deny" }` to `opencode.jsonc` [S16]. OpenCode's shell scanner applies these checks across Bash, Zsh, POSIX `sh`, and PowerShell [S16].
 
-**Open points.** Whether `event.resources` holds the full command text for `shell` is not stated in [S14] and must be confirmed (Q5). If it holds only a proposed prefix pattern, the adapter must use `ctx.tool.hook("execute.before", ...)` instead, whose blocking behavior in V2 is also unconfirmed (Q5).
+**Open points.** Whether `event.resources` holds the full command text for `shell` is not stated in [S14] and must be confirmed (Q5). The live plugin and its fail-closed behavior have not been verified; see Q19.
 
 ## Shared rules for all adapters
 

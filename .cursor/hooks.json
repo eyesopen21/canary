@@ -3,7 +3,7 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "node .cursor/hooks/canary-hook.js --agent cursor",
+        "command": "node dist/cli/entry.js hook --agent cursor",
         "matcher": "Shell",
         "timeout": 10,
         "failClosed": true

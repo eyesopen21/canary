@@ -5,7 +5,7 @@
 | Version | 0.1 |
 | Date | 2026-11-22 |
 | Scope | MVP (P0) plus a P1/P2 backlog |
-| Status | Planning. Nothing in the work packages is implemented yet. |
+| Status | Local P0 implementation and acceptance tests are in place. Live-agent checks and hosted matrix results are pending. |
 
 This document turns the existing documentation into agent-sized work packages. It does not add requirements: every item traces to an ID in a source document.
 
@@ -21,7 +21,7 @@ This document turns the existing documentation into agent-sized work packages. I
 | `docs/open-questions.md` | Assumptions and things that need live verification | A1…A9, Q1…Q18 |
 | `README.md` | Planned command surface and public claims | `scan`, `hook`, `init`, `crash-test`, `badge`; roadmap `fix`, `freeze`, `rules`, `scan --ci` |
 | `AGENTS.md` | Planned source layout, repository rules, workflow | `src/core/`, `src/adapters/`, `src/cli/`, `fixtures/`, `tests/`, packaging |
-| `openspec/changes/baseline-canary-specs/` | Machine-checkable behavior for the hook core and the adapters | capabilities `hook-policy`, `agent-adapters` |
+| `openspec/specs/` | Machine-checkable behavior for the hook core and the adapters | capabilities `hook-policy`, `agent-adapters` |
 
 The current OpenSpec baseline covers only the first two rows of the behavior surface. Work packages WP-03 to WP-08 below need additional capabilities before their behavior is machine-checkable; this WBS is the map for creating them.
 
@@ -49,7 +49,7 @@ The current OpenSpec baseline covers only the first two rows of the behavior sur
 
 | ID | Name | Goal and source requirements | File ownership | Acceptance | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| WP-08 | CLI commands | One `canary` binary with `scan`, `hook`, `init`, `badge`; stdin/stdout contracts; write only `canary/findings.json` and `canary/badge.svg`. `CAN-I-01`…`04`, `CAN-I-08`, `CAN-F-08`, `CAN-U-01` | `src/cli/**`, `bin/**`, `tests/cli.test.ts`, `package.json` (`bin` field only) | `AC-6` with two commands on a clean machine; `CAN-T-04` through the real binary | WP-01…05, WP-07 |
+| WP-08 | CLI commands | One `canary` binary with `scan`, `hook`, `init`, `crash-test`, `badge`; stdin/stdout contracts; write only `canary/findings.json` and `canary/badge.svg`. `CAN-I-01`…`04`, `CAN-I-08`, `CAN-F-08`, `CAN-U-01` | `src/cli/**`, `bin/**`, `scripts/build.mjs`, `tests/cli.test.ts`, `package.json` | `AC-6` with two commands on a clean machine; `CAN-T-04` through the real binary | WP-01…05, WP-07 |
 | WP-09 | Full acceptance run | Run `CAN-T-01`…`04`, `CAN-T-06`…`08`; check AC-1, AC-2, AC-3, AC-5, AC-8; cross-platform and determinism checks. `CAN-N-03`, `CAN-N-04`, `CAN-N-05`, `CAN-N-06`, `CAN-T-07`, `CAN-T-08` | `tests/integration.test.ts`, `tests/platform.test.ts`, `tests/benchmark.test.ts` | The seven automatable acceptance criteria pass | WP-01…08 |
 
 ### Wave 3 — Human verification (cannot be automated by an agent)

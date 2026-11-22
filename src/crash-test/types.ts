@@ -24,6 +24,8 @@ export type SimulationReason =
   | "GUARD_TEMP_ROOT_CHANGED"
   | "COMMAND_UNAVAILABLE"
   | "COMMAND_FAILED"
+  | "LOCAL_GIT_TRANSPORT_FAILED"
+  | "EVALUATION_UNAVAILABLE"
   | "DATABASE_SIMULATED_BY_DESIGN"
   | "RUNTIME_ERROR";
 
@@ -43,6 +45,8 @@ export interface CommandOutcome {
   stdout?: string;
   /** Set when the executable does not exist (git not installed). */
   unavailable?: boolean;
+  /** Fixed classification only; child stderr is never returned or reported. */
+  failure?: "LOCAL_GIT_TRANSPORT_FAILED";
 }
 
 export type CommandRunner = (spec: CommandSpec) => CommandOutcome;
@@ -62,7 +66,7 @@ export interface ScenarioResult {
   /** Sanitized command text; contains a variable name, never a value. */
   command: string;
   withoutCanary: PhaseResult;
-  withCanary: PhaseResult & { decision: Decision; rule?: RuleId; message?: string };
+  withCanary: PhaseResult & { decision?: Decision; rule?: RuleId; message?: string };
 }
 
 export interface CrashTestReport {

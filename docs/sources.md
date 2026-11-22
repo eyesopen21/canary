@@ -8,17 +8,20 @@ Claims that have no source here are design decisions of this project, and the do
 
 | ID | Source | Used for |
 | --- | --- | --- |
-| S1 | Claude Code, *Hooks reference*. <https://code.claude.com/docs/en/hooks> | Event names, `PreToolUse` input and output fields, exit codes, `onFailure`, `SessionStart`, plugin `hooks/hooks.json`, `CLAUDE_PROJECT_DIR`, `CLAUDE_PLUGIN_ROOT` |
+| S1 | Claude Code, *Hooks reference*. <https://code.claude.com/docs/en/hooks> | Event names, `PreToolUse` input and output fields, exit codes, command hooks' `command` + `args` exec form, `mcp_tool` fields and result handling, `onFailure` (for `mcp_tool`, v2.1.328+), MCP connection timing and launch-time `SessionStart` skips, plugin `hooks/hooks.json`, `CLAUDE_PROJECT_DIR`, `CLAUDE_PLUGIN_ROOT` |
 | S2 | Claude Code, *Configure permissions*. <https://code.claude.com/docs/en/permissions> | Deny rules take precedence over hook decisions; a hook-blocked call stays blocked |
 | S3 | Claude Code, *Permission modes*. <https://code.claude.com/docs/en/permission-modes> | `bypassPermissions` behavior and the actions no mode auto-approves |
 | S4 | Claude Code, *Plugin manifest reference*. <https://code.claude.com/docs/en/plugins-reference> | `.claude-plugin/plugin.json` and the standard plugin layout |
-| S8 | OpenAI Codex, *Hooks*. <https://developers.openai.com/codex/hooks> | Codex hook locations, `PreToolUse` deny shape, tool coverage, fail-open on error, plugin-bundled hooks |
+| S8 | OpenAI Codex, *Hooks*. <https://developers.openai.com/codex/hooks> | Codex hook locations, `PreToolUse` deny shape and tool coverage, `mcp_tool` hooks against an already-connected server, unavailable-server fail-open behavior, plugin-bundled hooks |
 | S9 | Cursor, *Hooks*. <https://cursor.com/docs/agent/hooks> | `hooks.json` schema, `preToolUse` and `beforeShellExecution`, `permission`, `user_message`, `agent_message`, `failClosed` |
 | S10 | Gemini CLI, *Gemini CLI hooks*. <https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/index.md> | Event list, exit codes, configuration schema, environment variables, hook fingerprinting |
 | S11 | Gemini CLI, *Hooks reference*. <https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/reference.md> | `BeforeTool` input and output fields, `SessionStart` |
 | S12 | Gemini CLI, *Extensions reference*. <https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/reference.md> | Hooks in an extension live in `hooks/hooks.json` |
 | S25 | Gemini CLI, *Shell tool*. <https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/shell.md> | `run_shell_command` parameters `command`, `description`, `dir_path` |
 | S26 | Gemini CLI, *Policy engine*. <https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/policy-engine.md> | TOML rules with `decision = "deny"`, `commandPrefix`, approval modes including `yolo`, policy locations |
+| S27 | Node.js, *Modules: TypeScript type stripping*. <https://nodejs.org/docs/latest-v22.x/api/typescript.html> | Built-in `node:module.stripTypeScriptTypes` API used by the package build |
+| S28 | Google Cloud SDK, *gcloud CLI configurations*. <https://docs.cloud.google.com/sdk/docs/configurations> | Default configuration and credentials directory on supported platforms |
+| S29 | OpenSpec, official documentation. <https://openspec.dev/> | OpenSpec artifact workflow and strict validation |
 | S13 | OpenCode, *Plugins*. <https://opencode.ai/docs/plugins> | Plugin configuration and discovery under `.opencode/plugins/` |
 | S14 | OpenCode, *Server* (plugin API). <https://opencode.ai/docs/build/plugins/server> | `ctx.permission.hook("evaluate", ...)`, `ctx.tool.hook("execute.before", ...)` |
 | S15 | OpenCode, *V1 plugin migration*. <https://opencode.ai/docs/build/plugins/migrate-v1> | Mapping from V1 `tool.execute.before` to V2 hooks |

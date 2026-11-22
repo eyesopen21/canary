@@ -1,11 +1,28 @@
 {
   "name": "@eyesopen21/canary",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Design-phase implementation of Canary's core and agent adapters",
+  "description": "Offline repository risk checks and pre-execution hooks for coding agents",
   "license": "MIT",
   "scripts": {
-    "test": "node --test \"tests/*.test.ts\""
-  }
+    "test": "npm run build && node --test \"tests/*.test.ts\"",
+    "build": "node --disable-warning=ExperimentalWarning scripts/build.mjs",
+    "bench": "npm run build && node scripts/bench-hook.mjs && node scripts/bench-mcp-tool.mjs",
+    "prepare": "npm run build"
+  },
+  "bin": {
+    "canary": "./bin/canary.js"
+  },
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "files": [
+    "bin",
+    "dist",
+    ".claude-plugin",
+    ".codex-plugin",
+    "hooks",
+    "gemini-extension.json"
+  ]
 }

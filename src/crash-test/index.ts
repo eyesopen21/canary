@@ -17,11 +17,11 @@ import {
 import {
   defaultCommandRunner,
   FAKE_DATABASE_URL,
-  FALLBACK_DECISIONS,
   prepareScenario,
   SCENARIO_IDS,
   SCENARIO_META,
 } from "./scenarios.ts";
+import { evaluate } from "../core/evaluate.ts";
 import type {
   CommandRunner,
   CrashScenarioId,
@@ -65,27 +65,31 @@ function reasonOf(error: unknown): SimulationReason {
 }
 
 /** Last line of defence: never let a temp path or the fake URL reach a report. */
-function redact(text: string, root: string): string {
-  return text
+function redact(text: string, root?: string): string {
+  const withoutPath = root ? text.replaceAll(root, "[temporary-directory]") : text;
+  return withoutPath
     .replaceAll(FAKE_DATABASE_URL, "[redacted]")
-    .replaceAll(root, "[temporary-directory]")
     .replace(/[\u0000-\u001F\u007F]/g, "");
 }
 
-function evaluateFor(id: CrashScenarioId, options: CrashTestOptions): EvaluationResult {
-  const fallback = FALLBACK_DECISIONS[id];
-  if (!options.evaluator) return fallback;
+function evaluateFor(
+  id: CrashScenarioId,
+  root: string | undefined,
+  options: CrashTestOptions,
+): EvaluationResult | undefined {
   try {
-    const result = options.evaluator({
+    const result = (options.evaluator ?? evaluate)({
       command: SCENARIO_META[id].command,
+      cwd: root,
+      projectRoot: root,
       // Only a synthetic value is ever given to an evaluator.
       env: id === "database" ? { DATABASE_URL: FAKE_DATABASE_URL } : {},
     });
-    if (result && typeof result.decision === "string") return result;
+    if (result && ["allow", "warn", "block"].includes(result.decision)) return result;
   } catch {
-    // Fail closed: an evaluator error is treated as a block.
+    // Do not claim Canary blocked the command when evaluation did not happen.
   }
-  return fallback;
+  return undefined;
 }
 
 function realRunDetail(id: CrashScenarioId): string {
@@ -100,7 +104,7 @@ async function runPhase(
   phase: "without" | "with",
   shared: Shared,
 ): Promise<PhaseResult> {
-  if (phase === "without" && shared.options.forceSimulation) {
+  if (shared.options.forceSimulation) {
     return simulated("FORCED", "Simulation requested; no destructive operation ran.");
   }
   if (id === "database") {
@@ -131,59 +135,55 @@ async function runPhase(
       ...effect,
     };
   } catch (error) {
-    return simulated(reasonOf(error), "A guard refused the operation; simulation shown instead.");
+    const reason = reasonOf(error);
+    const detail = reason === "LOCAL_GIT_TRANSPORT_FAILED"
+      ? "Git could not access the disposable local remote; simulation shown instead."
+      : "The isolated operation could not complete; simulation shown instead.";
+    return simulated(reason, detail);
   }
 }
 
+function evaluatedPhase(
+  decision: EvaluationResult | undefined,
+  alternative: PhaseResult | undefined,
+  root?: string,
+): ScenarioResult["withCanary"] {
+  if (!decision) {
+    return simulated("EVALUATION_UNAVAILABLE",
+      "Canary evaluation was unavailable; the crash-test harness withheld the command and no policy decision was made.");
+  }
+  const phase = decision.decision === "block"
+    ? { simulated: false, label: "prevented" as const, detail: "Canary withheld the command; no destructive operation ran." }
+    : alternative ?? simulated("RUNTIME_ERROR", "The isolated operation could not start.");
+  return { ...phase, decision: decision.decision, rule: decision.rule, message: redact(decision.message ?? "", root) };
+}
+
 async function runScenario(id: CrashScenarioId, shared: Shared): Promise<ScenarioResult> {
-  const decision = evaluateFor(id, shared.options);
-  const safeDecision: EvaluationResult = {
-    decision: decision.decision,
-    rule: decision.rule,
-    message: redact(decision.message ?? "", shared.root),
-  };
+  const decision = evaluateFor(id, shared.root, shared.options);
 
   const withoutCanary = await runPhase(id, "without", shared);
-  const withCanary =
-    decision.decision === "block"
-      ? {
-          simulated: false,
-          label: "prevented" as const,
-          detail: "Canary withheld the command; no destructive operation ran.",
-        }
-      : await runPhase(id, "with", shared);
-
+  const permitted = decision && decision.decision !== "block"
+    ? await runPhase(id, "with", shared)
+    : undefined;
+  const withCanary = evaluatedPhase(decision, permitted, shared.root);
   return {
     id,
     title: SCENARIO_META[id].title,
     command: redact(SCENARIO_META[id].command, shared.root),
     withoutCanary,
-    withCanary: { ...withCanary, ...safeDecision },
+    withCanary,
   };
 }
 
-function allSimulatedReport(reason: SimulationReason): CrashTestReport {
-  const detail = "A guard refused the operation; simulation shown instead.";
-  return {
-    schema_version: 1,
-    simulatedScenarios: [...SCENARIO_IDS],
-    cleanup: "not-started",
-    scenarios: SCENARIO_IDS.map((id) => {
-      const decision = FALLBACK_DECISIONS[id];
-      return {
-        id,
-        title: SCENARIO_META[id].title,
-        command: SCENARIO_META[id].command,
-        withoutCanary: simulated(reason, detail),
-        withCanary: {
-          simulated: false,
-          label: "prevented" as const,
-          detail: "Canary withheld the command; no destructive operation ran.",
-          ...decision,
-        },
-      };
-    }),
-  };
+function simulatedScenarios(reason: SimulationReason, options: CrashTestOptions, root?: string): ScenarioResult[] {
+  const phase = simulated(reason, "The isolated operation could not start; simulation shown instead.");
+  return SCENARIO_IDS.map((id) => ({
+    id,
+    title: SCENARIO_META[id].title,
+    command: redact(SCENARIO_META[id].command, root),
+    withoutCanary: phase,
+    withCanary: evaluatedPhase(evaluateFor(id, root, options), phase, root),
+  }));
 }
 
 /** Run all three scenarios in a fresh, guarded temporary directory. */
@@ -192,7 +192,12 @@ export async function runCrashTest(options: CrashTestOptions = {}): Promise<Cras
   try {
     root = await createSandboxRoot(options.onTempRoot);
   } catch (error) {
-    return allSimulatedReport(reasonOf(error));
+    return {
+      schema_version: 1,
+      scenarios: simulatedScenarios(reasonOf(error), options),
+      simulatedScenarios: [...SCENARIO_IDS],
+      cleanup: "not-started",
+    };
   }
 
   const opts: CrashTestOptions = { ...options };
@@ -214,21 +219,7 @@ export async function runCrashTest(options: CrashTestOptions = {}): Promise<Cras
     }
   } catch {
     // A failure in shared setup must not leave a partial report behind.
-    scenarios = SCENARIO_IDS.map((id) => {
-      const decision = FALLBACK_DECISIONS[id];
-      return {
-        id,
-        title: SCENARIO_META[id].title,
-        command: SCENARIO_META[id].command,
-        withoutCanary: simulated("RUNTIME_ERROR", "A guard refused the operation; simulation shown instead."),
-        withCanary: {
-          simulated: false,
-          label: "prevented" as const,
-          detail: "Canary withheld the command; no destructive operation ran.",
-          ...decision,
-        },
-      };
-    });
+    scenarios = simulatedScenarios("RUNTIME_ERROR", opts, root);
   }
 
   let cleanup: CrashTestReport["cleanup"] = "refused";

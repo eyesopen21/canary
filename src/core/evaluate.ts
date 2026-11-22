@@ -31,7 +31,9 @@ export function evaluate(input: EvaluationInput): EvaluationResult {
 
   const context = {
     root,
-    baseDir: root ?? input.cwd,
+    // Relative delete targets expand from the shell command's working
+    // directory; the project root remains the boundary they must stay inside.
+    baseDir: input.cwd ?? root,
     env: input.env ?? {},
   };
 

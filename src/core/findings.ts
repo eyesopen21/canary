@@ -67,7 +67,10 @@ const LEAK_RULES: readonly LeakRule[] = [
   { label: "user at host", pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/ },
   {
     label: "domain name",
-    pattern: /\b(?:[A-Za-z0-9-]+\.)+(?:com|net|org|io|dev|cloud|internal|local|example|corp)\b/i,
+    // A leading dot is a common filename marker: `.env.example` is a
+    // repository-relative path, not a host. The lookbehind still allows
+    // multi-label hosts such as `db.production.example` to be detected.
+    pattern: /(?<!\.)\b(?:[A-Za-z0-9-]+\.)+(?:com|net|org|io|dev|cloud|internal|local|example|corp)\b/i,
   },
   { label: "host name", pattern: /\blocalhost\b/i },
   { label: "credential-like token", pattern: /\b[A-Z][A-Z0-9_]{8,}[a-z][A-Za-z0-9_]{2,}\b/ },

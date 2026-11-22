@@ -164,13 +164,46 @@ test("Cursor block: deny with the same message for user and agent", () => {
     workspace_roots: ["/work"],
   });
 
-  assert.deepEqual(calls, [{ command: "git push --force", cwd: "/work" }]);
+  assert.deepEqual(calls, [{
+    command: "git push --force",
+    cwd: "/work",
+    projectRoot: "/work",
+  }]);
   assert.deepEqual(output, {
     permission: "deny",
     user_message: BLOCK.message,
     agent_message: BLOCK.message,
   });
   assert.deepEqual(JSON.parse(toStdout(output)), output);
+});
+
+test("Cursor uses the per-tool cwd and the matching workspace root", () => {
+  const { evaluator, calls } = fakeEvaluator(ALLOW);
+  const output = createCursorAdapter(evaluator)({
+    tool_input: {
+      command: "rm -rf ../dist",
+      working_directory: "/workspace/repo/nested",
+    },
+    cwd: "/hook/process",
+    workspace_roots: ["/workspace/other", "/workspace/repo"],
+  });
+
+  assert.deepEqual(calls, [{
+    command: "rm -rf ../dist",
+    cwd: "/workspace/repo/nested",
+    projectRoot: "/workspace/repo",
+  }]);
+  assert.deepEqual(output, { permission: "allow" });
+});
+
+test("Cursor leaves an ambiguous multi-root workspace root unset", () => {
+  const { evaluator, calls } = fakeEvaluator(ALLOW);
+  createCursorAdapter(evaluator)({
+    tool_input: { command: "rm -rf target", working_directory: "/outside" },
+    workspace_roots: ["/workspace/one", "/workspace/two"],
+  });
+
+  assert.deepEqual(calls, [{ command: "rm -rf target", cwd: "/outside" }]);
 });
 
 test("Cursor warn: allow plus a local log containing only rule and decision", () => {

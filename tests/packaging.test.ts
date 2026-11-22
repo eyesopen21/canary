@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
+import { execFileSync, spawnSync } from "node:child_process";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (relativePath) => readFileSync(resolve(root, relativePath), "utf8");
@@ -49,8 +51,10 @@ const parseJsonc = (relativePath) => JSON.parse(stripJsonComments(read(relativeP
 
 const JSON_FILES = [
   ".claude-plugin/plugin.json",
+  "hooks/claude-code.json",
   "hooks/hooks.json",
   ".codex-plugin/plugin.json",
+  "hooks/codex.json",
   ".cursor/hooks.json",
   "gemini-extension.json",
 ];
@@ -58,6 +62,7 @@ const JSON_FILES = [
 const PACKAGING_FILES = [
   ...JSON_FILES,
   "opencode.jsonc",
+  "bin/canary.js",
   ".opencode/plugins/canary/index.ts",
 ];
 
@@ -71,8 +76,10 @@ test("opencode.jsonc parses as JSONC", () => {
   assert.doesNotThrow(() => parseJsonc("opencode.jsonc"));
 });
 
-test("Claude Code uses PreToolUse, Bash|PowerShell and onFailure block", () => {
-  const cfg = parseJson("hooks/hooks.json");
+test("Claude Code uses its own PreToolUse config and packaged entry point", () => {
+  const manifest = parseJson(".claude-plugin/plugin.json");
+  assert.equal(manifest.hooks, "./hooks/claude-code.json");
+  const cfg = parseJson("hooks/claude-code.json");
   const group = cfg.hooks.PreToolUse.find((g) => g.matcher === "Bash|PowerShell");
   assert.ok(group, "a Bash|PowerShell PreToolUse group must exist");
   assert.match(group.matcher, /Bash/);
@@ -81,12 +88,13 @@ test("Claude Code uses PreToolUse, Bash|PowerShell and onFailure block", () => {
   assert.equal(hook.type, "command");
   assert.equal(hook.command, "node");
   assert.equal(hook.onFailure, "block");
-  assert.ok(hook.args.includes("--agent"));
-  assert.ok(hook.args.includes("claude-code"));
+  assert.deepEqual(hook.args, ["${CLAUDE_PLUGIN_ROOT}/dist/cli/entry.js", "hook", "--agent", "claude-code"]);
 });
 
-test("Codex uses ^Bash$, statusMessage and no fail-open field", () => {
-  const cfg = parseJson("hooks/hooks.json");
+test("Codex uses its own ^Bash$ config, statusMessage and no fail-open field", () => {
+  const manifest = parseJson(".codex-plugin/plugin.json");
+  assert.equal(manifest.hooks, "./hooks/codex.json");
+  const cfg = parseJson("hooks/codex.json");
   const group = cfg.hooks.PreToolUse.find((g) => g.matcher === "^Bash$");
   assert.ok(group, "a ^Bash$ PreToolUse group must exist");
   const hook = group.hooks[0];
@@ -125,11 +133,13 @@ test("Gemini CLI uses BeforeTool, run_shell_command and a millisecond timeout", 
 
 test("OpenCode plugin registers an evaluate permission hook for shell", () => {
   const source = read(".opencode/plugins/canary/index.ts");
+  assert.match(source, /from "\.\.\/\.\.\/\.\.\/src\/cli\/hook\.ts"/);
+  assert.match(source, /from "\.\.\/\.\.\/\.\.\/src\/adapters\/opencode\.ts"/);
+  assert.match(source, /hookEvaluator\(\)/);
+  assert.match(source, /createOpenCodeAdapter\(/);
   assert.match(source, /ctx\.permission\.hook\("evaluate"/);
-  assert.match(source, /event\.action\s*!==\s*"shell"/);
-  assert.match(source, /event\.effect\s*=\s*"deny"/);
-  assert.match(source, /event\.effect\s*=\s*"ask"/);
-  assert.doesNotMatch(source, /event\.effect\s*=\s*"allow"/);
+  assert.match(source, /ctx\.location\.directory/);
+  assert.doesNotMatch(source, /@eyesopen21\/canary\/core/);
 });
 
 test("opencode.jsonc denies the documented git push --force example", () => {
@@ -152,12 +162,116 @@ test("plugin and extension manifests identify canary", () => {
 test("hook commands use only documented placeholders", () => {
   // Placeholders copied from docs/specs/agent-adapters.md; ${/} is the Gemini
   // path separator documented in the same file.
-  const documented = new Set(["CLAUDE_PLUGIN_ROOT", "extensionPath", "/"]);
+  const documented = new Set(["CLAUDE_PLUGIN_ROOT", "PLUGIN_ROOT", "extensionPath", "/"]);
   for (const file of PACKAGING_FILES) {
     for (const match of read(file).matchAll(/\$\{([^}]+)\}/g)) {
       assert.ok(documented.has(match[1]), `${file}: undocumented placeholder ${match[1]}`);
     }
   }
+});
+
+test("all checked-in command hooks invoke built JavaScript and reject a synthetic force push", () => {
+  const hookConfigs = [
+    { file: "hooks/claude-code.json", select: (cfg) => cfg.hooks.PreToolUse[0].hooks[0], agent: "claude-code" },
+    { file: "hooks/codex.json", select: (cfg) => cfg.hooks.PreToolUse[0].hooks[0], agent: "codex" },
+    { file: ".cursor/hooks.json", select: (cfg) => cfg.hooks.preToolUse[0], agent: "cursor" },
+    { file: "hooks/hooks.json", select: (cfg) => cfg.hooks.BeforeTool[0].hooks[0], agent: "gemini-cli" },
+  ];
+  for (const { file, select, agent } of hookConfigs) {
+    const hook = select(parseJson(file));
+    const command = hook.command + " " + (hook.args ?? []).join(" ");
+    assert.match(command, /dist/);
+    assert.match(command, /entry\.js/);
+    assert.doesNotMatch(command, /\bcanary(?:\.cmd)?\s+hook/);
+    assert.match(command, /\bhook\b/);
+    assert.match(command, new RegExp(`--agent\\s+"?${agent}"?`));
+
+    const event = JSON.stringify({
+      tool_name: "Shell",
+      tool_input: { command: "git push --force origin main", working_directory: root },
+      cwd: root,
+      workspace_roots: [root],
+    });
+    const result = spawnSync(process.execPath, [resolve(root, "dist/cli/entry.js"), "hook", "--agent", agent], {
+      cwd: root,
+      input: event,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, `${file} must launch successfully: ${result.stderr}`);
+    if (agent === "cursor") {
+      assert.equal(JSON.parse(result.stdout).permission, "deny", file);
+    } else if (agent === "gemini-cli") {
+      assert.equal(JSON.parse(result.stdout).decision, "deny", file);
+    } else {
+      assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision, "deny", file);
+    }
+  }
+});
+
+test("a hook from a git archive runs built JavaScript without loading TypeScript", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "canary-git-archive-"));
+  const archivedPackage = join(temporary, "package");
+  mkdirSync(archivedPackage);
+  try {
+    const archive = execFileSync("git", ["archive", "--format=tar", "HEAD"], { cwd: root, maxBuffer: 32 * 1024 * 1024 });
+    execFileSync("tar", ["-xf", "-", "-C", archivedPackage], { input: archive, maxBuffer: 32 * 1024 * 1024 });
+    // Overlay only package runtime paths so this test also exercises current
+    // package files before they are committed; no project Git index is changed.
+    for (const relativePath of [".claude-plugin", ".codex-plugin", "hooks", ".cursor/hooks.json", "gemini-extension.json", "bin/canary.js", "dist"]) {
+      const source = resolve(root, relativePath);
+      if (!existsSync(source)) continue;
+      const target = resolve(archivedPackage, relativePath);
+      mkdirSync(dirname(target), { recursive: true });
+      cpSync(source, target, { recursive: true, force: true });
+    }
+
+    const hookConfig = JSON.parse(readFileSync(resolve(archivedPackage, "hooks/claude-code.json"), "utf8"));
+    const hook = hookConfig.hooks.PreToolUse[0].hooks[0];
+    assert.equal(hook.command, "node");
+    assert.deepEqual(hook.args.slice(1), ["hook", "--agent", "claude-code"]);
+    const entry = hook.args[0].replace("${CLAUDE_PLUGIN_ROOT}", archivedPackage);
+    assert.equal(entry, resolve(archivedPackage, "dist/cli/entry.js"));
+
+    const typeGuard = join(temporary, "reject-typescript.mjs");
+    writeFileSync(typeGuard, [
+      'import { registerHooks } from "node:module";',
+      "registerHooks({ resolve(specifier, context, nextResolve) {",
+      "  const result = nextResolve(specifier, context);",
+      '  if (result.url.endsWith(".ts")) throw new Error("TypeScript source was loaded");',
+      "  return result;",
+      "} });",
+      "",
+    ].join("\n"));
+
+    const env = { ...process.env, CLAUDE_PLUGIN_ROOT: archivedPackage };
+    delete env.CANARY_DEV;
+    const event = JSON.stringify({
+      tool_name: "Bash",
+      tool_input: { command: "git push --force origin main" },
+      cwd: archivedPackage,
+    });
+    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--import", typeGuard, entry, ...hook.args.slice(1)], {
+      cwd: archivedPackage,
+      env,
+      input: event,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, `archived hook must start: ${result.stderr}`);
+    assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision, "deny");
+    assert.equal(result.stderr, "");
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("OpenCode CLI uses the shared adapter for a synthetic permission event", () => {
+  const result = spawnSync(process.execPath, [resolve(root, "bin/canary.js"), "hook", "--agent", "opencode"], {
+    cwd: root,
+    input: JSON.stringify({ action: "shell", resources: "git push --force origin main" }),
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).effect, "deny");
 });
 
 function escapeRegExp(value) {

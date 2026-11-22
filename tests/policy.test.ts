@@ -23,6 +23,7 @@ let composeProject: string;
 function makeProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "canary-wp01-"));
   fs.mkdirSync(path.join(root, "dist"), { recursive: true });
+  fs.mkdirSync(path.join(root, "nested"), { recursive: true });
   fs.mkdirSync(path.join(root, "node_modules", ".cache"), { recursive: true });
   const link = path.join(root, "node_modules", ".cache", "link");
   try {
@@ -415,6 +416,14 @@ test("compose service name counts as a local host", () => {
       projectRoot: composeProject,
       env: { DATABASE_URL: `postgresql://user:${MARKER}@db:5432/app` },
     },
+    decision: "allow",
+  });
+});
+
+test("B1 resolves relative targets from command cwd and checks against project root", () => {
+  check({
+    name: "relative target from nested cwd resolves within project",
+    given: input("rm -rf ../dist", { cwd: path.join(project, "nested") }),
     decision: "allow",
   });
 });
