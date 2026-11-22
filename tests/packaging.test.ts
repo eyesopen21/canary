@@ -88,7 +88,7 @@ test("Claude Code uses its own PreToolUse config and packaged entry point", () =
   assert.equal(hook.type, "command");
   assert.equal(hook.command, "node");
   assert.equal(hook.onFailure, "block");
-  assert.deepEqual(hook.args, ["${CLAUDE_PLUGIN_ROOT}/dist/cli/entry.js", "hook", "--agent", "claude-code"]);
+  assert.deepEqual(hook.args, ["${CLAUDE_PLUGIN_ROOT}/dist/hook/claude-code.mjs"]);
 });
 
 test("Codex uses its own ^Bash$ config, statusMessage and no fail-open field", () => {
@@ -100,7 +100,7 @@ test("Codex uses its own ^Bash$ config, statusMessage and no fail-open field", (
   const hook = group.hooks[0];
   assert.equal(hook.type, "command");
   assert.match(hook.command, /^node\s/);
-  assert.match(hook.command, /--agent codex/);
+  assert.match(hook.command, /dist[\\/]hook[\\/]codex\.mjs/);
   assert.ok(typeof hook.statusMessage === "string" && hook.statusMessage.length > 0);
   // Fields that make a Codex PreToolUse hook run the command anyway [S8].
   const failOpenFields = ["onFailure", "continue", "stopReason", "suppressOutput", "decision", "permissionDecision"];
@@ -116,7 +116,7 @@ test("Cursor uses preToolUse, Shell and failClosed true", () => {
   assert.ok(group, "a Shell preToolUse group must exist");
   assert.equal(group.failClosed, true);
   assert.match(group.command, /^node\s/);
-  assert.match(group.command, /--agent cursor/);
+  assert.match(group.command, /dist[\\/]hook[\\/]cursor\.mjs/);
 });
 
 test("Gemini CLI uses BeforeTool, run_shell_command and a millisecond timeout", () => {
@@ -127,18 +127,18 @@ test("Gemini CLI uses BeforeTool, run_shell_command and a millisecond timeout", 
   assert.equal(hook.name, "canary");
   assert.equal(hook.type, "command");
   assert.match(hook.command, /^node\s/);
-  assert.match(hook.command, /--agent gemini-cli/);
+  assert.match(hook.command, /dist(?:\$\{\/\}|[\\/])hook(?:\$\{\/\}|[\\/])gemini-cli\.mjs/);
   assert.equal(hook.timeout, 10000);
 });
 
-test("OpenCode plugin registers an evaluate permission hook for shell", () => {
+test("OpenCode plugin runs the self-contained bundle for shell permissions", () => {
   const source = read(".opencode/plugins/canary/index.ts");
-  assert.match(source, /from "\.\.\/\.\.\/\.\.\/src\/cli\/hook\.ts"/);
-  assert.match(source, /from "\.\.\/\.\.\/\.\.\/src\/adapters\/opencode\.ts"/);
-  assert.match(source, /hookEvaluator\(\)/);
-  assert.match(source, /createOpenCodeAdapter\(/);
+  assert.match(source, /dist[\\/]hook[\\/]opencode\.mjs/);
+  assert.match(source, /execFileSync\(process\.execPath/);
   assert.match(source, /ctx\.permission\.hook\("evaluate"/);
   assert.match(source, /ctx\.location\.directory/);
+  assert.doesNotMatch(source, /src[\\/]cli[\\/]hook\.ts/);
+  assert.doesNotMatch(source, /src[\\/]adapters[\\/]opencode\.ts/);
   assert.doesNotMatch(source, /@eyesopen21\/canary\/core/);
 });
 
@@ -180,11 +180,12 @@ test("all checked-in command hooks invoke built JavaScript and reject a syntheti
   for (const { file, select, agent } of hookConfigs) {
     const hook = select(parseJson(file));
     const command = hook.command + " " + (hook.args ?? []).join(" ");
-    assert.match(command, /dist/);
-    assert.match(command, /entry\.js/);
+    assert.match(command, agent === "gemini-cli"
+      ? /dist(?:\$\{\/\}|[\\/])hook(?:\$\{\/\}|[\\/])gemini-cli\.mjs/
+      : new RegExp(`dist[\\\\/]hook[\\\\/]${agent}\\.mjs`));
+    assert.doesNotMatch(command, /entry\.js/);
     assert.doesNotMatch(command, /\bcanary(?:\.cmd)?\s+hook/);
-    assert.match(command, /\bhook\b/);
-    assert.match(command, new RegExp(`--agent\\s+"?${agent}"?`));
+    assert.doesNotMatch(command, /--agent/);
 
     const event = JSON.stringify({
       tool_name: "Shell",
@@ -192,7 +193,7 @@ test("all checked-in command hooks invoke built JavaScript and reject a syntheti
       cwd: root,
       workspace_roots: [root],
     });
-    const result = spawnSync(process.execPath, [resolve(root, "dist/cli/entry.js"), "hook", "--agent", agent], {
+    const result = spawnSync(process.execPath, [resolve(root, "dist", "hook", `${agent}.mjs`)], {
       cwd: root,
       input: event,
       encoding: "utf8",
@@ -228,9 +229,9 @@ test("a hook from a git archive runs built JavaScript without loading TypeScript
     const hookConfig = JSON.parse(readFileSync(resolve(archivedPackage, "hooks/claude-code.json"), "utf8"));
     const hook = hookConfig.hooks.PreToolUse[0].hooks[0];
     assert.equal(hook.command, "node");
-    assert.deepEqual(hook.args.slice(1), ["hook", "--agent", "claude-code"]);
+    assert.equal(hook.args.length, 1);
     const entry = hook.args[0].replace("${CLAUDE_PLUGIN_ROOT}", archivedPackage);
-    assert.equal(resolve(entry), resolve(archivedPackage, "dist/cli/entry.js"));
+    assert.equal(resolve(entry), resolve(archivedPackage, "dist/hook/claude-code.mjs"));
 
     const typeGuard = join(temporary, "reject-typescript.mjs");
     writeFileSync(typeGuard, [
@@ -250,7 +251,7 @@ test("a hook from a git archive runs built JavaScript without loading TypeScript
       tool_input: { command: "git push --force origin main" },
       cwd: archivedPackage,
     });
-    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--import", pathToFileURL(typeGuard).href, entry, ...hook.args.slice(1)], {
+    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--import", pathToFileURL(typeGuard).href, entry], {
       cwd: archivedPackage,
       env,
       input: event,

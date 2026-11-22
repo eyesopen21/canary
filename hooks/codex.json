@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${PLUGIN_ROOT}/dist/cli/entry.js\" hook --agent codex",
+            "command": "node \"${PLUGIN_ROOT}/dist/hook/codex.mjs\"",
             "timeout": 10,
             "statusMessage": "Canary: checking command"
           }

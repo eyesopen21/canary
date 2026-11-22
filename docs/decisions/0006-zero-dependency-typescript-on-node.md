@@ -10,7 +10,7 @@
 
 CAN-C-01 fixes the implementation language as TypeScript on Node.js. CAN-C-02 forbids an LLM in the decision path, and CAN-N-02 requires a one-command install with no native dependencies. The repository rule on dependencies says that a dependency added to the core needs an ADR.
 
-Node.js 22.22 provides built-in TypeScript type stripping [S27]. Canary uses that API in `scripts/build.mjs` to generate JavaScript from the `.ts` implementation. The executable and hook configurations use the built `dist/cli/entry.js` by default; developers can opt into loading the source entry only by setting `CANARY_DEV=1`. Marketplace installs from GitHub need a runnable tree and do not run Canary's build script; [ADR-0007](0007-commit-built-javascript-for-marketplace-installs.md) records the packaging decision. The built-in `node:test` runner and `node:assert` are used by the repository test suite.
+Node.js 22.22 provides built-in TypeScript type stripping [S27]. Canary uses that API in `scripts/build.mjs` to generate JavaScript from the `.ts` implementation. The executable uses `dist/cli/entry.js` by default; developers can opt into loading the source entry only by setting `CANARY_DEV=1`. Command hooks use self-contained per-agent bundles in `dist/hook/`, produced by the same zero-dependency build script without an external bundler. Marketplace installs from GitHub need a runnable tree and do not run Canary's build script; [ADR-0007](0007-commit-built-javascript-for-marketplace-installs.md) records the packaging decision. The built-in `node:test` runner and `node:assert` are used by the repository test suite.
 
 ## Decision
 

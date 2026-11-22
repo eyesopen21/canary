@@ -276,14 +276,15 @@ function seedConfig(repo: string, agent: Agent): string | undefined {
 }
 
 function assertInitialized(agent: Agent, configPath: string, output: string): void {
-  const assertBuiltCommand = (command: string): void => {
+  const assertBuiltCommand = (command: string, agent: Agent): void => {
     assert.match(command, /^node\s/);
-    assert.match(command, /dist[\\/]cli[\\/]entry\.js/);
-    assert.match(command, /hook --agent /);
+    assert.match(command, new RegExp(`dist[\\\\/]hook[\\\\/]${agent}\\.mjs`));
+    assert.doesNotMatch(command, /entry\.js/);
     assert.doesNotMatch(command, /\bcanary(?:\.cmd)?\s+hook/);
-    const quotedPath = command.match(/^node\s+["']([^"']+)["']\s+hook --agent /);
-    assert.ok(quotedPath, "generated command must quote the build path");
-    assert.ok(isAbsolute(quotedPath[1]), "generated build path must be absolute");
+    assert.doesNotMatch(command, /--agent/);
+    const quotedPath = command.match(/^node\s+["']([^"']+)["']\s*$/);
+    assert.ok(quotedPath, "generated command must quote the bundle path");
+    assert.ok(isAbsolute(quotedPath[1]), "generated bundle path must be absolute");
   };
   switch (agent) {
     case "claude-code": {
@@ -291,10 +292,10 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assert.equal(config.userNote, `retain-${marker}`);
       const group = config.hooks.PreToolUse.find((item: any) => item.matcher === "Bash|PowerShell");
       const hooks = group.hooks.filter((hook: any) => hook.command === "node" && Array.isArray(hook.args)
-        && hook.args.slice(-3).join(" ") === "hook --agent claude-code");
+        && hook.args.length === 1 && hook.args[0].endsWith("claude-code.mjs"));
       assert.equal(hooks.length, 1);
       assert.ok(group.hooks.some((hook: any) => hook.command === "other-tool --check"));
-      assert.match(hooks[0].args[0], /dist[\\/]cli[\\/]entry\.js$/);
+      assert.match(hooks[0].args[0], /dist[\\/]hook[\\/]claude-code\.mjs$/);
       assert.ok(isAbsolute(hooks[0].args[0]), "Claude Code build path must be absolute");
       assert.equal(hooks[0].onFailure, "block");
       assert.doesNotMatch(output, new RegExp(marker));
@@ -303,9 +304,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
     case "codex": {
       const config = readJson(configPath);
       const group = config.hooks.PreToolUse.find((item: any) => item.matcher === "^Bash$");
-      const hooks = group.hooks.filter((hook: any) => hook.command.includes("hook --agent codex"));
+      const hooks = group.hooks.filter((hook: any) => hook.command.includes("codex.mjs"));
       assert.equal(hooks.length, 1);
-      assertBuiltCommand(hooks[0].command);
+      assertBuiltCommand(hooks[0].command, "codex");
       assert.ok(group.hooks.some((hook: any) => hook.command === "other-tool --check"));
       assert.match(output, /hook failure lets the command run/);
       break;
@@ -314,9 +315,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       const config = readJson(configPath);
       assert.equal(config.userNote, `retain-${marker}`);
       const hooks = config.hooks.preToolUse;
-      const canaryHooks = hooks.filter((hook: any) => hook.command.includes("hook --agent cursor"));
+      const canaryHooks = hooks.filter((hook: any) => hook.command.includes("cursor.mjs"));
       assert.equal(canaryHooks.length, 1);
-      assertBuiltCommand(canaryHooks[0].command);
+      assertBuiltCommand(canaryHooks[0].command, "cursor");
       assert.ok(hooks.some((hook: any) => hook.command === "other-tool --check"));
       assert.equal(canaryHooks[0].failClosed, true);
       break;
@@ -325,9 +326,9 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       const config = readJson(configPath);
       assert.equal(config.userNote, `retain-${marker}`);
       const group = config.hooks.BeforeTool.find((item: any) => item.matcher === "run_shell_command");
-      const hooks = group.hooks.filter((hook: any) => hook.command.includes("hook --agent gemini-cli"));
+      const hooks = group.hooks.filter((hook: any) => hook.command.includes("gemini-cli.mjs"));
       assert.equal(hooks.length, 1);
-      assertBuiltCommand(hooks[0].command);
+      assertBuiltCommand(hooks[0].command, "gemini-cli");
       assert.ok(group.hooks.some((hook: any) => hook.command === "other-tool --check"));
       assert.match(output, /hook failure lets the command run/);
       assert.match(output, /policies\/ directory/);
@@ -346,7 +347,7 @@ function assertInitialized(agent: Agent, configPath: string, output: string): vo
       assert.doesNotMatch(output, new RegExp(marker));
       const plugin = readFileSync(join(dirnameOf(configPath), ".opencode", "plugins", "canary", "index.ts"), "utf8");
       assert.match(plugin, /execFileSync\(process\.execPath/);
-      assert.match(plugin, /dist.*cli.*entry\.js/);
+      assert.match(plugin, /dist.*hook.*opencode\.mjs/);
       const execArgs = plugin.match(/execFileSync\(process\.execPath,\s*(\[[^\]]+\])/);
       assert.ok(execArgs, "generated OpenCode plugin must pass an argument array");
       assert.ok(isAbsolute(JSON.parse(execArgs[1])[0]), "OpenCode build path must be absolute");

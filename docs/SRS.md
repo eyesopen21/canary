@@ -253,7 +253,7 @@ Benchmark run on 2026-11-22 (UTC): Windows_NT 10.0.26200 (`win32`, `x64`), AMD R
 | CAN-C-02 | The decision path (checks, policy, score) MUST NOT call an LLM. | [ADR-0001](decisions/0001-deterministic-core-without-llm.md) |
 | CAN-C-03 | Each agent adapter MUST be a thin translation layer; policy logic MUST live in the shared core. | [ADR-0005](decisions/0005-shared-core-with-thin-agent-adapters.md) |
 | CAN-C-04 | The package MUST use the documented agent package layouts: `.claude-plugin/plugin.json` referencing `hooks/claude-code.json` [S4]; `.codex-plugin/plugin.json` referencing `hooks/codex.json` [S8]; and `gemini-extension.json` with its hook definition in `hooks/hooks.json` [S12]. Cursor and OpenCode project configurations are produced by `canary init` at the paths in CAN-I-09 [S9][S13][S16]. | S4, S8, S9, S12, S13, S16 |
-| CAN-C-05 | The package MUST include the built JavaScript entry point, and the bin and every command hook MUST run `dist/cli/entry.js`. The source entry MAY run only when `CANARY_DEV=1` is explicitly set. GitHub marketplace installs MUST NOT depend on an install-time build step. | ADR-0007; S4, S8, S12 |
+| CAN-C-05 | The package MUST include the built JavaScript entry point and one self-contained bundle per agent at `dist/hook/<agent>.mjs`. The bin MUST run `dist/cli/entry.js`; every command hook MUST run that agent's bundle with stdin and stdout and MUST NOT pass through `cli/main`. Bundles MUST contain the core and only their own adapter, MUST import only `node:` built-ins, and MUST fail the build if a relative import remains. The source entry MAY run only when `CANARY_DEV=1` is explicitly set. GitHub marketplace installs MUST NOT depend on an install-time build step. | ADR-0006, ADR-0007; S4, S8, S12, S27 |
 
 ### 3.7 Software system attributes
 
@@ -280,8 +280,8 @@ The latest reported local test run has 130 passing tests, 4 skips caused by unav
 | --- | --- | --- |
 | CAN-T-01 | **Trap repositories.** `fixtures/` holds one repository per P0 check that must produce exactly the expected findings, plus one clean repository that must produce none. | CAN-F-01.x, CAN-F-02, CAN-F-03 |
 | CAN-T-02 | **No-leak test.** Fixtures contain synthetic secrets that include a unique marker string. The test runs `scan`, `hook`, `crash-test`, and `badge`, and fails if the marker appears in stdout, stderr, any written file, or any log. | CAN-F-02, CAN-N-10, CAN-D-01 |
-| CAN-T-03 | **Policy table.** A table of commands with the expected decision and message for each rule in policy.md, run through the core and through each adapter. | CAN-F-04, CAN-F-05, CAN-F-06, CAN-I-05 |
-| CAN-T-04 | **Adapter contract.** For each agent, sample events built from that agent's documentation are piped to `canary hook --agent <name>`, and the output is validated against the documented fields. | CAN-F-19, CAN-I-03, CAN-I-05, CAN-I-06, CAN-I-07 |
+| CAN-T-03 | **Policy table.** A table of commands with the expected decision and message for each rule in policy.md, run through the core, through each adapter, and through each agent's self-contained bundle. | CAN-F-04, CAN-F-05, CAN-F-06, CAN-I-05, CAN-C-05 |
+| CAN-T-04 | **Adapter contract.** For each agent, sample events built from that agent's documentation are piped to `canary hook --agent <name>` and to `dist/hook/<agent>.mjs`, and the output is validated against the documented fields. | CAN-F-19, CAN-I-03, CAN-I-05, CAN-I-06, CAN-I-07, CAN-C-05 |
 | CAN-T-05 | **Live agent check.** For each agent, a manual run in a disposable repository confirms that a blocked command does not run. The result and the agent version are recorded in the release notes. | CAN-F-19, Q1 to Q5 |
 | CAN-T-06 | **Isolation check.** The crash test runs inside a watcher that records every file write; the test fails on any write outside the temporary directory. | CAN-F-07 |
 | CAN-T-07 | **Determinism.** Two scans of each fixture produce byte-identical `findings.json`. | CAN-N-04, CAN-D-01 |

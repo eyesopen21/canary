@@ -9,13 +9,20 @@ import {
 
 const BUILD_ENTRY = fileURLToPath(new URL("../../dist/cli/entry.js", import.meta.url));
 
+/** Self-contained hook bundle: core plus one adapter, stdin to stdout. */
+const HOOK_BUNDLE = (agent: AgentName) => fileURLToPath(new URL(`../../dist/hook/${agent}.mjs`, import.meta.url));
+
+function isBundlePath(value: string, agent: AgentName): boolean {
+  return /[\\/]dist[\\/]hook[\\/]/.test(value) && value.endsWith(`${agent}.mjs`);
+}
+
 function shellQuote(value: string): string {
   return process.platform === "win32"
     ? `"${value}"`
     : "'" + value.replace(/'/g, "'\\''") + "'";
 }
 
-const COMMAND = (agent: AgentName) => "node " + shellQuote(BUILD_ENTRY) + " hook --agent " + agent;
+const COMMAND = (agent: AgentName) => "node " + shellQuote(HOOK_BUNDLE(agent));
 
 function objectAt(parent: Record<string, unknown>, key: string): Record<string, unknown> {
   const value = parent[key];
@@ -72,9 +79,12 @@ function upsertFlatHook(
 function isCanaryHook(entry: Record<string, unknown>, agent: AgentName): boolean {
   const args = Array.isArray(entry?.args) ? entry.args.map(String) : [];
   const suffix = "hook --agent " + agent;
-  return args.slice(-3).join(" ") === suffix
-    || entry?.command === "canary hook --agent " + agent
-    || (typeof entry?.command === "string" && entry.command.endsWith(" " + suffix))
+  const command = typeof entry?.command === "string" ? entry.command : "";
+  const isBundle = args.some((arg) => isBundlePath(arg, agent)) || isBundlePath(command, agent);
+  const isLegacy = args.slice(-3).join(" ") === suffix
+    || command === "canary hook --agent " + agent
+    || command.endsWith(" " + suffix);
+  return isBundle || isLegacy
     || (agent !== "cursor" && agent !== "gemini-cli" && agent !== "opencode"
       && entry?.type === "mcp_tool" && entry.server === "canary" && entry.tool === "canary_pre_tool_use");
 }
@@ -147,7 +157,7 @@ function planClaude(root: string, useMcpTool = false): PlannedWrite {
   const hook = useMcpTool ? mcpHook("claude-code") : {
     type: "command",
     command: "node",
-    args: [BUILD_ENTRY, "hook", "--agent", "claude-code"],
+    args: [HOOK_BUNDLE("claude-code")],
     timeout: 10,
     onFailure: "block",
   };
@@ -212,7 +222,7 @@ function planOpenCode(root: string): PlannedWrite[] {
   if (current !== undefined && !current.startsWith(header)) {
     throw new Error("Existing OpenCode Canary plugin is managed outside init.");
   }
-  const plugin = header + `import { execFileSync } from "node:child_process"\nimport { Plugin } from "@opencode/plugin"\n\nexport default Plugin.define({\n  id: "canary",\n  async setup(ctx) {\n    await ctx.permission.hook("evaluate", async (event) => {\n      if (event.action !== "shell") return\n      try {\n        const output = execFileSync(process.execPath, [${JSON.stringify(BUILD_ENTRY)}, "hook", "--agent", "opencode"], {\n          input: JSON.stringify({ action: event.action, resources: event.resources }),\n          encoding: "utf8",\n          stdio: ["pipe", "pipe", "ignore"],\n          cwd: ctx.location.directory,\n          timeout: 10000,\n          windowsHide: true,\n        })\n        if (!output.trim()) return\n        const result = JSON.parse(output) as { effect?: "ask" | "deny"; message?: string }\n        if (result.effect === "deny" || result.effect === "ask") {\n          event.effect = result.effect\n          event.message = result.message\n        }\n      } catch {\n        // The hook is a guardrail; command failures leave OpenCode's decision unchanged.\n      }\n    })\n  },\n})\n`;
+  const plugin = header + `import { execFileSync } from "node:child_process"\nimport { Plugin } from "@opencode/plugin"\n\nexport default Plugin.define({\n  id: "canary",\n  async setup(ctx) {\n    await ctx.permission.hook("evaluate", async (event) => {\n      if (event.action !== "shell") return\n      try {\n        const output = execFileSync(process.execPath, [${JSON.stringify(HOOK_BUNDLE("opencode"))}], {\n          input: JSON.stringify({ action: event.action, resources: event.resources }),\n          encoding: "utf8",\n          stdio: ["pipe", "pipe", "ignore"],\n          cwd: ctx.location.directory,\n          timeout: 10000,\n          windowsHide: true,\n        })\n        if (!output.trim()) return\n        const result = JSON.parse(output) as { effect?: "ask" | "deny"; message?: string }\n        if (result.effect === "deny" || result.effect === "ask") {\n          event.effect = result.effect\n          event.message = result.message\n        }\n      } catch {\n        // The hook is a guardrail; command failures leave OpenCode's decision unchanged.\n      }\n    })\n  },\n})\n`;
   return [
     {
       ...writeOpenCodeJsonc(root, "opencode.jsonc", permissionRule),

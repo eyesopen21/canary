@@ -7,7 +7,7 @@
           {
             "name": "canary",
             "type": "command",
-            "command": "node \"${extensionPath}${/}dist${/}cli${/}entry.js\" hook --agent gemini-cli",
+            "command": "node \"${extensionPath}${/}dist${/}hook${/}gemini-cli.mjs\"",
             "timeout": 10000,
             "description": "Blocks irreversible shell commands"
           }

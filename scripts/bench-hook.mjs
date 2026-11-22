@@ -45,8 +45,8 @@ function generatedHook(root, agent) {
     const config = readJson(root, configPath);
     const group = config.hooks[eventName].find((item) => item.matcher === matcher);
     const hook = group?.hooks?.find((item) => Array.isArray(item.args)
-      ? item.args.includes("hook") && item.args.includes(agent)
-      : typeof item.command === "string" && item.command.includes("hook") && item.command.includes(agent));
+      ? item.args.some((arg) => String(arg).endsWith(`${agent}.mjs`))
+      : typeof item.command === "string" && item.command.includes(`${agent}.mjs`));
     if (!hook || typeof hook.command !== "string") throw new Error(`Generated ${agent} hook config was not found.`);
     if (Array.isArray(hook.args)) {
       return {
@@ -61,6 +61,7 @@ function generatedHook(root, agent) {
     const config = readJson(root, ".cursor/hooks.json");
     const hook = config.hooks.preToolUse.find((item) => item.matcher === "Shell");
     if (!hook || typeof hook.command !== "string") throw new Error("Generated Cursor hook config was not found.");
+    if (!hook.command.includes("cursor.mjs")) throw new Error("Generated Cursor hook does not use its bundle.");
     return { command: hook.command, shell: true };
   }
 
@@ -272,7 +273,7 @@ try {
   process.stdout.write(`OS: ${os.type()} ${os.release()} (${process.platform}, ${os.arch()})\n`);
   process.stdout.write(`CPU: ${cpu} (${logicalProcessors} logical processors)\n`);
   process.stdout.write(`Node: ${process.version}\n`);
-  process.stdout.write("Generated hook command: run exactly as configured (dist entry)\n");
+  process.stdout.write("Generated hook command: run exactly as configured (per-agent bundle)\n");
   process.stdout.write(`Samples per row: ${WARM_UP_RUNS} warm-up + ${MEASURED_RUNS} measured; percentiles use linear interpolation.\n\n`);
 
   process.stdout.write("Node startup floor\n");

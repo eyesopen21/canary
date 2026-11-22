@@ -25,13 +25,13 @@ Every field name and event name below is copied from the cited documentation. Th
 
 ## Built JavaScript runtime
 
-The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every checked-in command hook invokes `node` with the built `dist/cli/entry.js`. `canary init` writes an absolute path to that built entry in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`.
+The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`.
 
 The Claude Code, Codex, and Gemini CLI GitHub install instructions define package files and hook locations but no build-on-install step [S4][S8][S12]. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
 ## Claude Code
 
-**Configuration.** The package manifest `.claude-plugin/plugin.json` points to `hooks/claude-code.json`, which registers the `PreToolUse` hook. `canary init --agent claude-code` writes `.claude/settings.json` in a project. Both invoke Node with the built `dist/cli/entry.js`; the package commits `dist/` because GitHub marketplace installs do not run a Canary build step (see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md)). The generated project configuration stores the absolute path to that build.
+**Configuration.** The package manifest `.claude-plugin/plugin.json` points to `hooks/claude-code.json`, which registers the `PreToolUse` hook. `canary init --agent claude-code` writes `.claude/settings.json` in a project. Both invoke Node with the built `dist/hook/claude-code.mjs`; the package commits `dist/` because GitHub marketplace installs do not run a Canary build step (see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md)). The generated project configuration stores the absolute path to that bundle.
 
 ```json
 {
@@ -43,7 +43,7 @@ The Claude Code, Codex, and Gemini CLI GitHub install instructions define packag
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/cli/entry.js", "hook", "--agent", "claude-code"],
+            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/hook/claude-code.mjs"],
             "timeout": 10,
             "onFailure": "block"
           }
@@ -88,7 +88,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
 
 ## Codex
 
-**Configuration.** The package manifest `.codex-plugin/plugin.json` points to `hooks/codex.json`. `canary init --agent codex` writes `.codex/hooks.json` in the project [S8]. The packaged hook invokes `node` with `${PLUGIN_ROOT}/dist/cli/entry.js`; the generated project command invokes Node with an absolute path to the installed package's same build.
+**Configuration.** The package manifest `.codex-plugin/plugin.json` points to `hooks/codex.json`. `canary init --agent codex` writes `.codex/hooks.json` in the project [S8]. The packaged hook invokes `node` with `${PLUGIN_ROOT}/dist/hook/codex.mjs`; the generated project command invokes Node with an absolute path to the installed package's same bundle.
 
 ```json
 {
@@ -99,7 +99,7 @@ For `"deny"`, `permissionDecisionReason` is shown to Claude [S1]; `systemMessage
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${PLUGIN_ROOT}/dist/cli/entry.js\" hook --agent codex",
+            "command": "node \"${PLUGIN_ROOT}/dist/hook/codex.mjs\"",
             "timeout": 10,
             "statusMessage": "Canary: checking command"
           }
@@ -149,7 +149,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
   "hooks": {
     "preToolUse": [
       {
-        "command": "node \"<absolute Canary package path>/dist/cli/entry.js\" hook --agent cursor",
+        "command": "node \"<absolute Canary package path>/dist/hook/cursor.mjs\"",
         "matcher": "Shell",
         "timeout": 10,
         "failClosed": true
@@ -193,7 +193,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
           {
             "name": "canary",
             "type": "command",
-            "command": "node \"${extensionPath}${/}dist${/}cli${/}entry.js\" hook --agent gemini-cli",
+            "command": "node \"${extensionPath}${/}dist${/}hook${/}gemini-cli.mjs\"",
             "timeout": 10000,
             "description": "Blocks irreversible shell commands"
           }
@@ -229,7 +229,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## OpenCode
 
-**Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds permission rules to `opencode.jsonc` [S13][S16]. The generated plugin starts Node in exec form with the absolute path to `dist/cli/entry.js`, passing `hook --agent opencode` as separate arguments.
+**Configuration.** `canary init --agent opencode` writes a plugin under `.opencode/plugins/canary/` and adds permission rules to `opencode.jsonc` [S13][S16]. The generated plugin starts Node in exec form with the absolute path to `dist/hook/opencode.mjs` and passes the synthetic permission event on stdin; it does not pass `hook --agent` arguments. The checked-in example under `.opencode/plugins/canary/` uses the same bundle through `execFileSync`.
 
 The generated plugin calls the built entry with `execFileSync(process.execPath, [buildPath, "hook", "--agent", "opencode"], ...)` and applies a returned `ask` or `deny` decision to the V2 permission event. This keeps policy in the shared core and avoids a `canary` executable or Windows `.cmd` shim on `PATH`.
 

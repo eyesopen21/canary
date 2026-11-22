@@ -25,9 +25,9 @@ The Claude Code plugin reference [S4], Codex hooks documentation [S8], and Gemin
 
 ## Decision Outcome
 
-Chosen option: commit `dist/` alongside its TypeScript sources. Remove the `dist/` ignore rule and update generated JavaScript whenever source changes are built. The executable and all command hooks run `dist/cli/entry.js`. `bin/canary.js` may select `src/cli/entry.ts` only when `CANARY_DEV=1` is explicitly set. `canary init` writes commands that invoke Node with an absolute path to the installed package's built entry; Claude Code uses `command` plus `args` so it spawns Node directly in exec form [S1].
+Chosen option: commit `dist/` alongside its TypeScript sources. Remove the `dist/` ignore rule and update generated JavaScript whenever source changes are built. The executable runs `dist/cli/entry.js`. Command hooks run the self-contained per-agent bundles in `dist/hook/` described in the amendment below. `bin/canary.js` may select `src/cli/entry.ts` only when `CANARY_DEV=1` is explicitly set. `canary init` writes commands that invoke Node with an absolute path to the installed package's built bundle; Claude Code uses `command` plus `args` so it spawns Node directly in exec form [S1].
 
-The packaging test creates an archive based on `HEAD` with only the package runtime paths overlaid from the working tree, then runs the packaged hook under a module resolver that rejects `.ts` imports. On a clean committed checkout, the archived tree is the `HEAD` tree itself.
+The packaging test creates an archive based on `HEAD` with only the package runtime paths overlaid from the working tree, then runs the packaged bundle under a module resolver that rejects `.ts` imports. On a clean committed checkout, the archived tree is the `HEAD` tree itself.
 
 ## Consequences
 
@@ -41,6 +41,10 @@ The packaging test creates an archive based on `HEAD` with only the package runt
 ### Release branch or tag with generated JavaScript
 
 Rejected: each marketplace install would need to select the release branch or a release tag, and maintainers would need to keep that ref synchronized with source. The main branch and its archives would remain non-runnable, despite the documented GitHub-install paths.
+
+## Amendment: per-agent hook bundles (2026-11-22)
+
+The decision to commit `dist/` is unchanged. `scripts/build.mjs` now also emits `dist/hook/<agent>.mjs`, one self-contained module per agent that inlines the shared core and only that agent's adapter, imports only `node:` built-ins, reads stdin and writes stdout, and does not pass through `cli/main`. Versioned hook manifests and `canary init` point at these bundles; `bin/canary.js` and the opt-in MCP server still use `dist/cli/entry.js`. This keeps the marketplace property that no install-time build is needed and removes the CLI dispatch from the hook process. The build fails if a bundle still contains a relative import, and CAN-T-03/CAN-T-04 exercise the bundles directly. No new build dependency was introduced.
 
 ## More Information
 
