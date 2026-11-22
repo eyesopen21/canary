@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Node ${{ matrix.node }} on ${{ matrix.os }}
@@ -15,8 +18,22 @@ jobs:
         node: [22.22.0, latest]
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
       - run: npm test
+      - name: Run benchmarks
+        if: hashFiles('scripts/bench-hook.mjs') != '' && hashFiles('scripts/bench-mcp-tool.mjs') != ''
+        run: npm run bench --if-present > bench-output.md
+      - name: Extract numeric benchmark results
+        if: hashFiles('scripts/bench-hook.mjs') != '' && hashFiles('scripts/bench-mcp-tool.mjs') != ''
+        run: >-
+          node --input-type=module -e 'import fs from "node:fs"; const rows = fs.readFileSync("bench-output.md", "utf8").split(/\r?\n/).filter((line) => line.trim().startsWith("|")); const values = []; let metricColumns = null; for (const row of rows) { const cells = row.split("|").slice(1, -1).map((cell) => cell.trim()); if (cells.length === 0 || cells.every((cell) => /^[-:\s]+$/.test(cell))) continue; if (cells.some((cell) => /^(?:Median|P90) \(ms\)$/i.test(cell))) { metricColumns = cells.map((cell) => /^(?:Median|P90) \(ms\)$/i.test(cell)); continue; } if (metricColumns) cells.forEach((cell, index) => { if (metricColumns[index] && /^\d+(?:\.\d+)?$/.test(cell)) values.push(Number(cell)); }); } if (values.length === 0) throw new Error("No numeric benchmark measurements found"); fs.writeFileSync("benchmark-numbers.json", JSON.stringify(values) + "\n");'
+      - name: Upload numeric benchmark results
+        if: hashFiles('scripts/bench-hook.mjs') != '' && hashFiles('scripts/bench-mcp-tool.mjs') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: benchmark-numbers-${{ matrix.os }}-node-${{ matrix.node }}
+          path: benchmark-numbers.json
+          if-no-files-found: error
