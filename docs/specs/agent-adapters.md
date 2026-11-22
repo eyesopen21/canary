@@ -27,7 +27,7 @@ Every field name and event name below is copied from the cited documentation. Th
 
 The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. Its OpenCode plugin uses `execFileSync(process.execPath, ...)`. Generated hooks do not invoke a `canary` command from `PATH`. Codex and Cursor keep a single shell `command` string: [S8] documents no `command` + `args` exec form for Codex, and Cursor's hook commands are run through a shell chosen by the desktop app [S9]. See the per-agent sections below for the resulting cost.
 
-The Claude Code, Codex, and Gemini CLI GitHub install instructions define package files and hook locations but no build-on-install step [S4][S8][S12]. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
+Checked against the primary pages on 2026-11-22 (Q25): Claude Code and Codex define plugin manifests, hook files, and bundled paths but document no build-on-install step [S4][S8][S32]; Gemini CLI copies the extension during install and requires `gemini extensions update` to pull source changes [S12]. None of the three documents TypeScript compilation or a `dist/` build at install time. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
 
 ## Opt-in MCP tool prototype (proposed, not the default)
 
@@ -196,7 +196,7 @@ The adapter MUST emit only the fields shown above. The fail-open behavior on err
 
 ## Gemini CLI
 
-**Configuration.** As an extension, hooks live in `hooks/hooks.json` in the extension directory, not in `gemini-extension.json` [S12]. `${extensionPath}` is substituted in that file [S12]. The project-level alternative is `.gemini/settings.json` [S10]. The extension includes committed build output because Gemini CLI copies the extension on install and does not run a Canary build step [S12]. `canary init` writes a project command with an absolute path to the installed package build.
+**Configuration.** As an extension, hooks live in `hooks/hooks.json` in the extension directory, not in `gemini-extension.json` [S12]. `${extensionPath}` is substituted in that file [S12]. The project-level alternative is `.gemini/settings.json` [S10]. The extension includes committed build output because Gemini CLI copies the extension on install [S12] and none of the three primary installer pages documents a build step [S4][S8][S12][S32]. `canary init` writes a project command with an absolute path to the installed package build.
 
 ```json
 {

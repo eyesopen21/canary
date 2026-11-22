@@ -10,7 +10,7 @@ decision-makers: Canary maintainers
 
 The package's TypeScript source is stripped to JavaScript by `npm run build`, and the generated JavaScript lives in `dist/`. GitHub plugin and extension installs must be runnable from the repository contents. `dist/` was ignored, and the executable preferred `src/cli/main.ts` whenever that file existed. An install from GitHub therefore selected TypeScript and paid type-stripping startup cost on every hook invocation.
 
-The Claude Code plugin reference [S4], Codex hooks documentation [S8], and Gemini CLI extension reference [S12] describe manifests, hook files, and package layouts; none specifies an install-time build step. Gemini CLI documents copying the extension during install [S12]. Canary cannot rely on these marketplace installers to build `dist/`.
+The Claude Code plugin reference [S4], Codex hooks documentation [S8], and Gemini CLI extension reference [S12] describe manifests, hook files, and package layouts; none documents an install-time build or TypeScript compilation step. This was re-checked against the live pages on 2026-11-22 (Q25 in [open-questions.md](../open-questions.md)). In Claude Code, `${CLAUDE_PLUGIN_ROOT}` resolves to "the plugin's installed version" and is used for "scripts, binaries, and config files bundled with the plugin" [S4]. Codex loads plugin hooks from `hooks/hooks.json` in the plugin root or a `hooks` entry in `.codex-plugin/plugin.json`; the packaging page [S8] links states: "Hook scripts must exist in the execution environment; installing a plugin on the web doesn't deploy them" and "Codex downloads the package without running lifecycle scripts" [S32]. Gemini CLI states: "Gemini CLI creates a copy of the extension during installation. You must run `gemini extensions update` to pull changes from the source" [S12]. This is a documentation-level finding; no live install in the three agents was performed. Canary cannot rely on these marketplace installers to build `dist/`.
 
 ## Decision Drivers
 
@@ -50,4 +50,4 @@ The decision to commit `dist/` is unchanged. `scripts/build.mjs` now also emits 
 
 * [ADR-0006](0006-zero-dependency-typescript-on-node.md) records the zero-dependency Node build.
 * [S1] documents direct-exec hook form with `command` and `args`.
-* Marketplace source references: [S4], [S8], and [S12].
+* Marketplace source references: [S4], [S8], [S12], and [S32]. The install-time build provenance check is recorded in [Q25](../open-questions.md#resolved).

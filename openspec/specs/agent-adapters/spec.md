@@ -14,11 +14,15 @@ The package SHALL register Claude Code through `hooks/claude-code.json` referenc
 - **THEN** Claude Code and Codex point to their respective hook files, and Gemini CLI loads `hooks/hooks.json`
 
 ### Requirement: Built JavaScript hook runtime and per-agent bundles
-The package SHALL commit `dist/cli/entry.js` and one `dist/hook/<agent>.mjs` bundle per agent. `bin/canary.js` SHALL run the built CLI entry by default; hooks SHALL run their bundle. Bundles SHALL be self-contained with only `node:` imports and SHALL fail the build on relative imports. Source MAY load only with `CANARY_DEV=1`. No install-time build [S4][S8][S12][S27].
+The package SHALL commit `dist/cli/entry.js` and one `dist/hook/<agent>.mjs` bundle per agent. `bin/canary.js` SHALL run the built CLI entry by default; hooks SHALL run their bundle. Bundles SHALL be self-contained with only `node:` imports and SHALL fail the build on relative imports. Source MAY load only with `CANARY_DEV=1`. No install-time build [S4][S8][S12][S32][S27].
 
 #### Scenario: GitHub archive contains runnable hook bundles
 - **WHEN** the package is installed from GitHub or copied with `git archive HEAD`
 - **THEN** the hook runs `dist/hook/<agent>.mjs` and does not load a `.ts` module
+
+#### Scenario: Installers do not build the package
+- **WHEN** the package is installed as a Claude Code plugin, a Codex plugin, or a Gemini CLI extension
+- **THEN** no install-time build or TypeScript compilation step is documented for that installer [S4][S8][S12][S32], Gemini CLI creates a copy of the extension [S12], and the hook runs the committed bundle
 
 #### Scenario: Source mode requires explicit opt-in
 - **WHEN** `bin/canary.js` runs without `CANARY_DEV=1`
