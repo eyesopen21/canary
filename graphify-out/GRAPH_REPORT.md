@@ -1,9 +1,9 @@
-# Graph Report - fix-c3  (2026-11-22)
+# Graph Report - canary  (2026-11-22)
 
 ## Corpus Check
-- 138 files · ~97,282 words
+- 138 files · ~97,690 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 21 file(s) not represented in the graph (top: (none) 13, .mdc 2, .example 2)
+- Unclassified: 20 file(s) not represented in the graph (top: (none) 12, .mdc 2, .example 2)
 
 ## Summary
 - 1259 nodes · 2184 edges · 80 communities (62 shown, 18 thin omitted)
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6c56cdb3`
+- Built from commit: `d48869f8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
