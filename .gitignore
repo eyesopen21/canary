@@ -1,2 +1,4 @@
 /canary/
 *.tgz
+/graphify-out/cache/
+/assets/banners/
