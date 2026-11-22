@@ -2,7 +2,18 @@
 
 Canary scans a repository for selected agent-related risks and provides a command hook that blocks a small set of destructive shell commands. It is a local guardrail, not a security boundary.
 
-The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. The hook configurations and adapter contracts have **not been verified in live sessions with any of the five agents**. See [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
+The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. Live-session verification is outstanding for every agent:
+
+| Agent | Live AC-4 result |
+| --- | --- |
+| Claude Code | **Unverified** |
+| Codex | **Unverified** |
+| Cursor | **Unverified** |
+| Gemini CLI | **Unverified** |
+| OpenCode | **Unverified** |
+
+Do not change a status until a human has completed and recorded that agent's run in [the live-agent runbook](docs/testing/live-agent-checks.md). See also [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
+
 
 ## Install from this checkout
 
