@@ -22,6 +22,7 @@ Claims that have no source here are design decisions of this project, and the do
 | S27 | Node.js, *Modules: TypeScript type stripping*. <https://nodejs.org/docs/latest-v22.x/api/typescript.html> | Built-in `node:module.stripTypeScriptTypes` API used by the package build |
 | S28 | Google Cloud SDK, *gcloud CLI configurations*. <https://docs.cloud.google.com/sdk/docs/configurations> | Default configuration and credentials directory on supported platforms |
 | S29 | OpenSpec, official documentation. <https://openspec.dev/> | OpenSpec artifact workflow and strict validation |
+| S31 | Cloudflare, *Code Mode: the better way to use MCP*. <https://blog.cloudflare.com/code-mode/> | Code Mode turns MCP tools into a TypeScript API so an LLM writes one script instead of many tool calls; disposable V8 isolates run it through the Worker Loader API with network blocked and access only through bindings |
 | S13 | OpenCode, *Plugins*. <https://opencode.ai/docs/plugins> | Plugin configuration and discovery under `.opencode/plugins/` |
 | S14 | OpenCode, *Server* (plugin API). <https://opencode.ai/docs/build/plugins/server> | `ctx.permission.hook("evaluate", ...)`, `ctx.tool.hook("execute.before", ...)` |
 | S15 | OpenCode, *V1 plugin migration*. <https://opencode.ai/docs/build/plugins/migrate-v1> | Mapping from V1 `tool.execute.before` to V2 hooks |
