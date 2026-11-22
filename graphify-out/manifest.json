@@ -12,27 +12,27 @@
     "semantic_hash": ""
   },
   ".cursor/hooks.json": {
-    "mtime": 1795370090.7981753,
-    "seen": 1795371724.2257974,
-    "ast_hash": "4535abda16655f4ce73fac00e4ceab97",
+    "mtime": 1795377347.0028172,
+    "seen": 1795377929.2529283,
+    "ast_hash": "f95ead30554fd6f36a69ea1d1a00d8a9",
     "semantic_hash": ""
   },
   ".github/workflows/test.yml": {
-    "mtime": 1795370523.9494123,
-    "seen": 1795371724.2258022,
-    "ast_hash": "d5733e39eedd313a6cfeb355f2d13070",
+    "mtime": 1795374366.0254362,
+    "seen": 1795377929.2529345,
+    "ast_hash": "893b6efadab0d2e78672c66a0c399582",
     "semantic_hash": ""
   },
   ".opencode/plugins/canary/index.ts": {
-    "mtime": 1795370109.7452672,
-    "seen": 1795371724.2258077,
-    "ast_hash": "02499b205ffffe24e37f83fef8b46dbf",
+    "mtime": 1795377356.2571435,
+    "seen": 1795377929.2529397,
+    "ast_hash": "f05d68d62c66a71f4be05dba684189ee",
     "semantic_hash": ""
   },
   "bin/canary.js": {
-    "mtime": 1795369953.782522,
-    "seen": 1795371724.2258115,
-    "ast_hash": "3d66e112511f5001bac874f7c850df3b",
+    "mtime": 1795372340.316151,
+    "seen": 1795377929.2529447,
+    "ast_hash": "a94540585c0b091e139beec784d8ea58",
     "semantic_hash": ""
   },
   "fixtures/clean/config/test.json": {
@@ -168,21 +168,21 @@
     "semantic_hash": ""
   },
   "hooks/claude-code.json": {
-    "mtime": 1795370089.545093,
-    "seen": 1795371724.2258995,
-    "ast_hash": "163db70c4e54939673165d0e9bfb101c",
+    "mtime": 1795377329.8935006,
+    "seen": 1795377929.2530625,
+    "ast_hash": "9f8e254f40ff3f1b1b6efc5c6d931fef",
     "semantic_hash": ""
   },
   "hooks/codex.json": {
-    "mtime": 1795370089.9537902,
-    "seen": 1795371724.2259033,
-    "ast_hash": "b5681400fde06489afe42804acc657d0",
+    "mtime": 1795377336.6308215,
+    "seen": 1795377929.2530668,
+    "ast_hash": "74c989a6780e9d5239178131dd0b6cf1",
     "semantic_hash": ""
   },
   "hooks/hooks.json": {
-    "mtime": 1795370090.3860018,
-    "seen": 1795371724.225907,
-    "ast_hash": "1f2e8326ad11cecd2436f6e83aae5582",
+    "mtime": 1795377341.2633088,
+    "seen": 1795377929.2530708,
+    "ast_hash": "a9de6ea9642d9f9f387ae17928a8c4fd",
     "semantic_hash": ""
   },
   "openspec/changes/archive/2026-11-22-baseline-canary-specs/.openspec.yaml": {
@@ -198,15 +198,15 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1795370114.9701638,
-    "seen": 1795371724.2259183,
-    "ast_hash": "16024f9731764914e914fb25bd51d4ae",
+    "mtime": 1795374730.5211408,
+    "seen": 1795377929.2530835,
+    "ast_hash": "9cedb83d8554a0aed7471789dc8281ab",
     "semantic_hash": ""
   },
   "scripts/build.mjs": {
-    "mtime": 1795369879.4108925,
-    "seen": 1795371724.2259219,
-    "ast_hash": "cc5b78a716a7076261fa65822ca2adb0",
+    "mtime": 1795372524.3781424,
+    "seen": 1795377929.253099,
+    "ast_hash": "e0ca5a8b78eaea8ec326663082294e0e",
     "semantic_hash": ""
   },
   "src/adapters/claude-code.ts": {
@@ -264,21 +264,21 @@
     "semantic_hash": ""
   },
   "src/cli/init-files.ts": {
-    "mtime": 1795370957.303722,
-    "seen": 1795371724.2259638,
-    "ast_hash": "031bfa62ab1edcf58912d04dfd0b66dd",
+    "mtime": 1795372014.452993,
+    "seen": 1795377929.2531538,
+    "ast_hash": "27c8e998809a13858cd00ec2ed11a738",
     "semantic_hash": ""
   },
   "src/cli/init.ts": {
-    "mtime": 1795370957.2996857,
-    "seen": 1795371724.225968,
-    "ast_hash": "61769d1e396e105b33ed7299efbd5d38",
+    "mtime": 1795377324.7483957,
+    "seen": 1795377929.2531583,
+    "ast_hash": "8f0b13fd122a4cb704282fef60096a2f",
     "semantic_hash": ""
   },
   "src/cli/main.ts": {
-    "mtime": 1795370129.1493754,
-    "seen": 1795371724.2259722,
-    "ast_hash": "a996a8d2944ca90a5a6ca0846ea7ed93",
+    "mtime": 1795371993.3317876,
+    "seen": 1795377929.2531629,
+    "ast_hash": "dda60df9f186026932e77d5fd44f399f",
     "semantic_hash": ""
   },
   "src/cli/output.ts": {
@@ -426,9 +426,9 @@
     "semantic_hash": ""
   },
   "tests/cli.test.ts": {
-    "mtime": 1795370785.3223221,
-    "seen": 1795371724.2260861,
-    "ast_hash": "a867a1a915cdc50af5f55b2e7aa7ff12",
+    "mtime": 1795377446.8945956,
+    "seen": 1795377929.2533216,
+    "ast_hash": "7af50f39a7068b99802b13f99ad0aeaf",
     "semantic_hash": ""
   },
   "tests/findings.test.ts": {
@@ -444,9 +444,9 @@
     "semantic_hash": ""
   },
   "tests/packaging.test.ts": {
-    "mtime": 1795370191.2239628,
-    "seen": 1795371724.226098,
-    "ast_hash": "c2f06849189c5b77e11882ff1dca7d10",
+    "mtime": 1795377512.9491117,
+    "seen": 1795377929.2533345,
+    "ast_hash": "cb21b9db005ffd1fdfdc4ed674a26534",
     "semantic_hash": ""
   },
   "tests/policy.test.ts": {
@@ -510,15 +510,15 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795370845.8311357,
-    "seen": 1795371724.2261438,
-    "ast_hash": "0afabb2b32c82246fbf4315c66374043",
+    "mtime": 1795372137.9894555,
+    "seen": 1795377929.2533884,
+    "ast_hash": "601486bd56e435a6463ad255debaeac1",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1795354546.2235706,
-    "seen": 1795371724.2261517,
-    "ast_hash": "289a081c0834f4dec97ceeca42aeffee",
+    "mtime": 1795371726.4493258,
+    "seen": 1795377929.2533927,
+    "ast_hash": "5ab854214cb3dede2978e1055693860d",
     "semantic_hash": ""
   },
   "CONTRIBUTING.md": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795371035.199167,
-    "seen": 1795371724.2261586,
-    "ast_hash": "93e00091411e6f82f690a3eae778ac2c",
+    "mtime": 1795377224.194296,
+    "seen": 1795377929.2534018,
+    "ast_hash": "17657030247bea8bf6b4ee1b30fb7c1d",
     "semantic_hash": ""
   },
   "SECURITY.md": {
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "docs/SRS.md": {
-    "mtime": 1795371088.784126,
-    "seen": 1795371724.226169,
-    "ast_hash": "2428e4ea2240d399af884d8629353b4b",
+    "mtime": 1795377554.385988,
+    "seen": 1795377929.2534158,
+    "ast_hash": "ce8a94e1d5a0775c6b6e92d560ad6e80",
     "semantic_hash": ""
   },
   "docs/THREAT-MODEL.md": {
@@ -588,33 +588,33 @@
     "semantic_hash": ""
   },
   "docs/decisions/0006-zero-dependency-typescript-on-node.md": {
-    "mtime": 1795370596.2335074,
-    "seen": 1795371724.2261927,
-    "ast_hash": "8e83ca97f7c122201a049777ee79f0a3",
+    "mtime": 1795377614.9663966,
+    "seen": 1795377929.2534478,
+    "ast_hash": "107fcdf45f4682d90b33854790d50222",
     "semantic_hash": ""
   },
   "docs/decisions/README.md": {
-    "mtime": 1795354420.0031104,
-    "seen": 1795371724.2263317,
-    "ast_hash": "f7e080dd3a34f47c3e1f1055a6ca3a98",
+    "mtime": 1795372573.0328565,
+    "seen": 1795377929.253461,
+    "ast_hash": "058389d54f0416776367b58974b02887",
     "semantic_hash": ""
   },
   "docs/open-questions.md": {
-    "mtime": 1795370765.7830725,
-    "seen": 1795371724.226344,
-    "ast_hash": "200ab9617f45fcd2146a4674048c11aa",
+    "mtime": 1795377230.352836,
+    "seen": 1795377929.2534654,
+    "ast_hash": "85f9daca7a1a8691ec23dec7132c2d40",
     "semantic_hash": ""
   },
   "docs/sources.md": {
-    "mtime": 1795370833.9122214,
-    "seen": 1795371724.2263496,
-    "ast_hash": "6ca3b091c8099199fdf65d906fb95376",
+    "mtime": 1795372357.3586113,
+    "seen": 1795377929.25347,
+    "ast_hash": "1ce5216cc86b199891521abc6e023ce2",
     "semantic_hash": ""
   },
   "docs/specs/agent-adapters.md": {
-    "mtime": 1795370774.747215,
-    "seen": 1795371724.2263541,
-    "ast_hash": "b8beb9061ebf29ea02a39ce5b0efd118",
+    "mtime": 1795377596.0428112,
+    "seen": 1795377929.253474,
+    "ast_hash": "43952a37288dac5acf7f864178c48314",
     "semantic_hash": ""
   },
   "docs/specs/policy.md": {
@@ -684,15 +684,153 @@
     "semantic_hash": ""
   },
   "openspec/specs/agent-adapters/spec.md": {
-    "mtime": 1795370964.3738766,
-    "seen": 1795371724.2264059,
-    "ast_hash": "e89356997ef8d55ca881b4ae00138e91",
+    "mtime": 1795377679.09949,
+    "seen": 1795377929.2535372,
+    "ast_hash": "b2b911f1f99e19ed467c4b0a297fd125",
     "semantic_hash": ""
   },
   "openspec/specs/hook-policy/spec.md": {
     "mtime": 1795370964.4034197,
     "seen": 1795371724.2264102,
     "ast_hash": "ea614bc9d275e37a0643fb08b33f2e20",
+    "semantic_hash": ""
+  },
+  ".claude/settings.json": {
+    "mtime": 1795371726.5701025,
+    "seen": 1795377929.2529101,
+    "ast_hash": "f6477edec5a6b5bc404038e651358e07",
+    "semantic_hash": ""
+  },
+  "scripts/bench-hook.mjs": {
+    "mtime": 1795377464.9218137,
+    "seen": 1795377929.2530892,
+    "ast_hash": "a3d9d659544a124103a681e42ac89c59",
+    "semantic_hash": ""
+  },
+  "scripts/bench-mcp-tool.mjs": {
+    "mtime": 1795372321.578657,
+    "seen": 1795377929.2530944,
+    "ast_hash": "8e83431df2617635204ce1644b745514",
+    "semantic_hash": ""
+  },
+  "scripts/live-check-setup.mjs": {
+    "mtime": 1795377092.876225,
+    "seen": 1795377929.253103,
+    "ast_hash": "fab33ed39246f2988be851a18cf6a25c",
+    "semantic_hash": ""
+  },
+  "src/cli/entry.ts": {
+    "mtime": 1795371930.810951,
+    "seen": 1795377929.2531443,
+    "ast_hash": "e40e3c2a7009598430d89fa69b9505a4",
+    "semantic_hash": ""
+  },
+  "src/cli/mcp-server.ts": {
+    "mtime": 1795372410.2053418,
+    "seen": 1795377929.2531672,
+    "ast_hash": "af2609f3b27071289c1f528257e519f2",
+    "semantic_hash": ""
+  },
+  "src/hook/claude-code.ts": {
+    "mtime": 1795372474.7949622,
+    "seen": 1795377929.253272,
+    "ast_hash": "3950aab3a5964d598be91ed12ab95666",
+    "semantic_hash": ""
+  },
+  "src/hook/codex.ts": {
+    "mtime": 1795372475.9210298,
+    "seen": 1795377929.2532763,
+    "ast_hash": "f873b194836e22c7034a1ef9e0f39f7a",
+    "semantic_hash": ""
+  },
+  "src/hook/cursor-log.ts": {
+    "mtime": 1795372345.0719004,
+    "seen": 1795377929.2532804,
+    "ast_hash": "cb456ecbfa87865cc8d7e436ba9223e1",
+    "semantic_hash": ""
+  },
+  "src/hook/cursor.ts": {
+    "mtime": 1795372476.6968746,
+    "seen": 1795377929.2532847,
+    "ast_hash": "8d0b7597ae2e5b370d6c5298e9e3abff",
+    "semantic_hash": ""
+  },
+  "src/hook/gemini-cli.ts": {
+    "mtime": 1795372477.4430015,
+    "seen": 1795377929.2532885,
+    "ast_hash": "77beb3e77164b6d6fb3a2c4e3604f65b",
+    "semantic_hash": ""
+  },
+  "src/hook/opencode.ts": {
+    "mtime": 1795372478.342843,
+    "seen": 1795377929.2532933,
+    "ast_hash": "449e842489ff4cc9514d6e23ad644e71",
+    "semantic_hash": ""
+  },
+  "src/hook/runtime.ts": {
+    "mtime": 1795372344.0840333,
+    "seen": 1795377929.2532983,
+    "ast_hash": "2fa1539ea634af85ebe4cf2f4e801370",
+    "semantic_hash": ""
+  },
+  "tests/bundles.test.ts": {
+    "mtime": 1795377700.9233048,
+    "seen": 1795377929.253307,
+    "ast_hash": "592e7fc5d25c623b179739bc99d148d8",
+    "semantic_hash": ""
+  },
+  "docs/decisions/0007-commit-built-javascript-for-marketplace-installs.md": {
+    "mtime": 1795377631.6632657,
+    "seen": 1795377929.2534523,
+    "ast_hash": "3fde30e0cc86f14e25e0294cb7777a5b",
+    "semantic_hash": ""
+  },
+  "docs/decisions/0008-mcp-tool-hooks.md": {
+    "mtime": 1795372493.439831,
+    "seen": 1795377929.2534564,
+    "ast_hash": "707bd41c38e9f77cfe3e7c5693fe28b7",
+    "semantic_hash": ""
+  },
+  "docs/testing/live-agent-checks.md": {
+    "mtime": 1795377104.8581815,
+    "seen": 1795377929.253483,
+    "ast_hash": "87db726409bf82f42b7faf0da2f8f2bb",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-germanico-banner-1508x158.png": {
+    "mtime": 1795375630.5868137,
+    "seen": 1795377929.2535465,
+    "ast_hash": "f77cd8c768d6d73cab9c28422bb48452",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-germanico-minimal.png": {
+    "mtime": 1795375291.839935,
+    "seen": 1795377929.2535505,
+    "ast_hash": "d8dc7f556f5f1ae2b99d461662f21762",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-germanico.png": {
+    "mtime": 1795375193.5262299,
+    "seen": 1795377929.2535543,
+    "ast_hash": "536275c1faf6aec0c644e3b086b0630b",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-japones-banner-1508x158.png": {
+    "mtime": 1795375630.5110092,
+    "seen": 1795377929.253559,
+    "ast_hash": "e028825275983c15db01db7c63c5223d",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-japones-minimal.png": {
+    "mtime": 1795375303.5853174,
+    "seen": 1795377929.2535634,
+    "ast_hash": "6a2fd8d4c459e26829ca1167a4cc219b",
+    "semantic_hash": ""
+  },
+  "assets/banners/canary-japones.png": {
+    "mtime": 1795375207.1774428,
+    "seen": 1795377929.2535672,
+    "ast_hash": "cbdd4c13ce1001c31e61fb2cc4cc5d21",
     "semantic_hash": ""
   }
 }
