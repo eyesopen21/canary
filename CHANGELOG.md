@@ -17,3 +17,4 @@ Nothing in this section is released or implemented. It records the design work s
 - `docs/open-questions.md` and `docs/sources.md`.
 - `SECURITY.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, and the MIT `LICENSE`.
 - `package.json`, `tsconfig.json`, and `src/contract.ts`: zero-dependency TypeScript scaffolding for the core and adapters ([ADR-0006](docs/decisions/0006-zero-dependency-typescript-on-node.md)).
+- `docs/AGENT-WBS.md`: agent-oriented work breakdown derived from the SRS, specs, threat model, and ADRs.

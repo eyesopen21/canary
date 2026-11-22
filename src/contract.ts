@@ -40,3 +40,22 @@ export interface EvaluationResult {
 
 /** The core's public entry point, injected into adapters and tests. */
 export type Evaluator = (input: EvaluationInput) => EvaluationResult;
+
+export type Severity = "critical" | "high" | "medium" | "low";
+
+/** One scan finding. Values never contain a secret or a host from a credential. */
+export interface CheckFinding {
+  id: string;
+  check: string;
+  rule: string;
+  severity: Severity;
+  path: string;
+  line: number | null;
+  danger: string;
+  consequence: string;
+  fix: string | null;
+  manual: string | null;
+}
+
+/** A scanner check. It reads only the given repository root. */
+export type Check = (root: string) => CheckFinding[];
