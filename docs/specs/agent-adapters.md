@@ -2,14 +2,14 @@
 
 | | |
 | --- | --- |
-| Status | Implemented in this repository. Adapter contracts and package layouts are covered by repository tests, but no adapter has been verified in a live session with its agent. MVP acceptance is incomplete. |
+| Status | Implemented in this repository. Adapter contracts and package layouts are covered by repository tests. Cursor has one live pass for normal deny decisions; its `failClosed` error fallback is unverified. Claude Code has one `bypassPermissions` pass and OpenCode has one normal-mode pass. Codex remains unsupported until hook trust is rerun, and Gemini CLI is unverified. MVP acceptance is incomplete. |
 | Requirements | CAN-F-19, CAN-F-21, CAN-I-03, CAN-I-05 to CAN-I-07 in the [SRS](../SRS.md) |
 | Decision | [ADR-0005](../decisions/0005-shared-core-with-thin-agent-adapters.md) |
 | Date | 2026-11-22 |
 
 Each adapter reads one hook event from its agent, passes the shell command, the working directory, and the project root to the core, and writes the core's decision back in the agent's format. The rules themselves are in [policy.md](policy.md).
 
-Every field name and event name below is copied from the cited documentation. The repository has local adapter and packaging implementations, but live behavior remains unverified for all five agents (CAN-T-05). Do not treat config generation or unit tests as proof that an agent loads or enforces its hook.
+Every field name and event name below is copied from the cited documentation. The repository has local adapter and packaging implementations. The Cursor live result verifies normal deny behavior only, not error fallback. Claude Code, OpenCode, Codex, and Gemini CLI statuses are the ones recorded in [the runbook](../testing/live-agent-checks.md#results) (CAN-T-05). Do not treat config generation or unit tests as proof that an agent loads or enforces its hook.
 
 ## Summary
 
@@ -28,6 +28,8 @@ Every field name and event name below is copied from the cited documentation. Th
 The shipped `bin/canary.js` loads `dist/cli/entry.js` unless `CANARY_DEV=1` is explicitly set. Every command hook instead invokes `node` with that agent's self-contained bundle `dist/hook/<agent>.mjs`: the bundle contains the core and only its own adapter, imports only `node:` built-ins, reads stdin, writes stdout, and does not pass through `cli/main`. `scripts/build.mjs` fails the build if a relative import remains in a bundle. `canary init` writes an absolute path to that bundle in project hook configurations; Claude Code uses `command: "node"` plus an `args` array so it spawns Node directly in exec form [S1]. The OpenCode plugin calls `execFileSync("node", [absoluteBundlePath], ...)`. Node.js must be available on `PATH`; generated hooks do not invoke a `canary` command from `PATH`. Codex and Cursor keep a single shell `command` string: [S8] documents no `command` + `args` exec form for Codex, and Cursor's hook commands are run through a shell chosen by the desktop app [S9]. See the per-agent sections below for the resulting cost.
 
 Checked against the primary pages on 2026-11-22 (Q25): Claude Code and Codex define plugin manifests, hook files, and bundled paths but document no build-on-install step [S4][S8][S32]; Gemini CLI copies the extension during install and requires `gemini extensions update` to pull source changes [S12]. None of the three documents TypeScript compilation or a `dist/` build at install time. Canary therefore commits `dist/` so a repository install or `git archive HEAD` includes the hook runtime; see [ADR-0007](../decisions/0007-commit-built-javascript-for-marketplace-installs.md).
+
+The package also has an offline npm smoke command. It packs the committed build, installs into an empty temporary prefix without install scripts or dependency downloads, then runs the installed CLI against a fresh clean fixture and checks for exit code zero and no findings. CI runs this smoke on Ubuntu, macOS, and Windows; a local pass does not close AC-6 until the remote matrix passes.
 
 ## Opt-in MCP tool prototype (proposed, not the default)
 

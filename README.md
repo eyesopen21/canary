@@ -108,7 +108,7 @@ One core decides, and a thin adapter per agent translates its hook format. Hook 
 | Agent | Failure behavior |
 | --- | --- |
 | Claude Code | Configured with `onFailure: "block"`. |
-| Cursor | Configured with `failClosed: true`. |
+| Cursor | Configured with `failClosed: true`. A live normal-deny pass is recorded; hook-error fallback is unverified. |
 | Codex | **Fail-open:** a hook error, timeout, or malformed response can let the command run [S8]. |
 | Gemini CLI | **Fail-open:** non-JSON output or an unsupported exit code can let the command run [S10]. |
 | OpenCode | Fail-open behavior is unverified. Do not assume a hook failure blocks the command. |
