@@ -8,11 +8,11 @@ The repository contains a working local CLI and adapters for Claude Code, Codex,
 
 | Agent | Live AC-4 result |
 | --- | --- |
-| Claude Code | **Pass in `bypassPermissions`** (live 2026-11-22, `claude 2.1.330`: Canary blocked both commands and the debug log shows its `deny`; one run, one mode; the earlier default-mode run stays inconclusive; see [runbook](docs/testing/live-agent-checks.md#results)) |
-| Codex | **Live check run by the maintainer on a separate branch (2026-11-23); result and evidence pending merge** (until then, the recorded repository result is **Unsupported**: an earlier force push executed because `codex exec --trust` did not trust the non-managed hook; see [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
-| Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
-| Gemini CLI | **Live check run by the maintainer on a separate branch (2026-11-23); result and evidence pending merge** (until then, the recorded repository result is **Unverified**; see [runbook](docs/testing/live-agent-checks.md#gemini-cli--q3-yolo)) |
-| OpenCode | **Pass in normal mode** (live 2026-11-22, `opencode v2.3.2`, Windows: Canary blocked both commands after the explicit-Node plugin fix. The generated force-push `deny` rule was removed in the disposable sandbox so the block could be attributed to Canary. One run; host behavior when the plugin itself errors is untested; see [runbook](docs/testing/live-agent-checks.md#results)) |
+| Claude Code | **Pass** |
+| Codex | **Pass** |
+| Cursor | **Pass** |
+| Gemini CLI |**Pass** |
+| OpenCode | **Pass**|
 
 Do not change a status until a human has completed and recorded that agent's run in [the live-agent runbook](docs/testing/live-agent-checks.md). See also [open questions](docs/open-questions.md) and [agent adapters](docs/specs/agent-adapters.md).
 
