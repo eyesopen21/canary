@@ -32,6 +32,14 @@ The package SHALL commit `dist/cli/entry.js` and one `dist/hook/<agent>.mjs` bun
 - **WHEN** a hook bundle is generated or executed
 - **THEN** it has no relative import, no other agent's adapter, no CLI dispatch, and the build fails if a relative import is detected
 
+### Requirement: Offline package install smoke
+The package SHALL remain dependency-free. CI SHALL pack it, install the tarball offline into an empty temporary prefix without running install scripts, then execute the installed CLI against a fresh clean fixture and assert exit code zero and no findings. The fixture and scanned home SHALL be isolated from the checkout and user's real home.
+
+#### Scenario: Installed CLI scans a clean fixture without network access
+- **WHEN** the package smoke runs on Ubuntu, macOS, or Windows
+- **THEN** npm installs the packed package without dependency downloads, the installed CLI exits zero, and its `findings.json` contains no findings
+- **AND** the smoke runs outside the checkout with an isolated home and npm configuration/cache
+
 ### Requirement: Selected project configuration is previewed
 `canary init` SHALL write configuration only for the selected agent. The project paths SHALL be `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.gemini/settings.json`, or `.opencode/plugins/canary/` with `opencode.jsonc`. Before writing, it SHALL preview the full diff of Canary changes, omit unchanged existing values, and redact sensitive values.
 
@@ -166,4 +174,4 @@ Every adapter SHALL pass the same policy message to the agent and to the user wi
 
 ## Note: proposed MCP tool prototype (informational)
 
-This specification describes the shipped command-hook and server-plugin adapters. The opt-in `--mcp-tool` prototype in `src/mcp-hook/` is proposed, not adopted, and adds no requirement above. The default `canary init --agent <name>` path remains a command hook. The prototype's documented limits — fail-closed without a connection, first-command timing, events before server availability, local attack surface, ADR-0003 output rules, and secret-capable hook inputs (Q22, not solved) — are recorded in [ADR-0008](../../docs/decisions/0008-mcp-tool-hooks.md) and [open questions](../../docs/open-questions.md). No live-agent behavior is verified [S1][S8].
+This specification describes the shipped command-hook and server-plugin adapters. The opt-in `--mcp-tool` prototype in `src/mcp-hook/` is proposed, not adopted, and adds no requirement above. The default `canary init --agent <name>` path remains a command hook. The prototype's documented limits — fail-closed without a connection, first-command timing, events before server availability, local attack surface, ADR-0003 output rules, and secret-capable hook inputs (Q22, not solved) — are recorded in [ADR-0008](../../docs/decisions/0008-mcp-tool-hooks.md) and [open questions](../../docs/open-questions.md). Cursor has one live pass for normal deny decisions, but its error fallback is unverified; see the [runbook](../../docs/testing/live-agent-checks.md#results) [S1][S8].

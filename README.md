@@ -4,13 +4,13 @@ Canary scans a repository for selected agent-related risks and provides a comman
 
 ![Sanitized local crash-test and fixture-scan preview](docs/marketplace-demo.svg)
 
-The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. One live AC-4 pass is recorded (Cursor); Codex and OpenCode failed live checks and are listed as unsupported, Claude Code is inconclusive, and Gemini CLI remains unavailable pending setup:
+The repository contains a working local CLI and adapters for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. One live AC-4 pass is recorded for Cursor's normal deny decisions. Codex and OpenCode are unsupported after checks where a destructive action was not blocked by Canary; Claude Code is inconclusive, and Gemini CLI is unverified because the CLI is unavailable:
 
 | Agent | Live AC-4 result |
 | --- | --- |
 | Claude Code | **Inconclusive** (installed and authenticated; live checks in default and `bypassPermissions` modes showed no attributable Canary decision; see [runbook](docs/testing/live-agent-checks.md#results)) |
-| Codex | **Unsupported** (live 2026-11-22: an earlier force push executed because `codex exec --trust` did not trust the non-managed hook. A fresh sandbox rerun could not reach `/hooks` review or the test-only trust path because Codex could not initialize its local state database; neither check command ran. See [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
-| Cursor | **Pass** (live 2026-11-22: Canary blocked both commands; see [runbook](docs/testing/live-agent-checks.md#results)) |
+| Codex | **Unsupported** (live 2026-11-22: under `danger-full-access`, Codex's own rule blocked the delete, but the force push executed because the non-managed hook was not trusted. A fresh sandbox rerun could not reach `/hooks` review or the test-only trust path because Codex could not initialize its local state database; neither check command ran. A separate test-only hook-trust bypass produced a Canary force-push denial, but did not complete both checks in the ordinary mode. See [runbook](docs/testing/live-agent-checks.md#codex-q2-root-cause-2026-11-22)) |
+| Cursor | **Pass** (live 2026-11-22: Canary returned normal deny decisions for both commands; this did not test hook-error fallback despite `failClosed: true`. See [runbook](docs/testing/live-agent-checks.md#results)) |
 | Gemini CLI | **Unverified** (CLI not installed; AC-4 unverified; see the install and authentication workflow in the [runbook](docs/testing/live-agent-checks.md#gemini-cli--q3-yolo)) |
 | OpenCode | **Unsupported** (live 2026-11-22: sentinel delete executed with no Canary decision; force push denied by the generated `opencode.jsonc` rule, not Canary. An explicit-Node invocation fix is awaiting a complete live rerun; see [runbook](docs/testing/live-agent-checks.md#results)) |
 
@@ -63,7 +63,7 @@ Supported `--agent` values are `claude-code`, `codex`, `cursor`, `gemini-cli`, a
 | --- | --- | --- | --- |
 | Claude Code | `.claude/settings.json` | `PreToolUse` | Configured with `onFailure: "block"`; live behavior unverified. |
 | Codex | `.codex/hooks.json` | `PreToolUse` | Fail-open: a hook error, timeout, or malformed response can let the command run. |
-| Cursor | `.cursor/hooks.json` | `preToolUse` | Configured with `failClosed: true`; live behavior unverified. |
+| Cursor | `.cursor/hooks.json` | `preToolUse` | Normal deny behavior passed live; `failClosed: true` error fallback is unverified. |
 | Gemini CLI | `.gemini/settings.json` | `BeforeTool` | Fail-open: non-JSON output or an unsupported exit code can let the command run. |
 | OpenCode | `.opencode/plugins/canary/index.ts` and `opencode.jsonc` | V2 permission `evaluate` | Fail-open behavior is unverified; do not assume a hook failure blocks the command. |
 
@@ -75,7 +75,7 @@ The policy blocks recursive deletes whose targets cannot be safely resolved, des
 
 Canary only evaluates shell commands that reach its hook. It cannot stop equivalent actions hidden in scripts or other tools, an agent session where the hook is not loaded, an agent or person deliberately bypassing the hook, or an attacker with access to the machine. Its scanner checks repository content and selected local configuration; it does not inspect cloud accounts or prove what cloud credentials can access. Use operating-system isolation, restricted credentials, backups, and other independent controls where needed.
 
-Codex and Gemini CLI document fail-open behavior on hook errors. OpenCode's error behavior is unverified. The `onFailure: "block"` and `failClosed: true` settings are configured for Claude Code and Cursor respectively, but **the blocking behavior has not been confirmed in live agent sessions**. Canary's score is a heuristic, not a certification or audit opinion.
+Codex and Gemini CLI document fail-open behavior on hook errors. OpenCode's error behavior is unverified. Cursor's live pass confirms Canary's ordinary deny response for the two tested commands; it does not verify Cursor's `failClosed: true` behavior when the hook errors. Claude Code's configured `onFailure: "block"` fallback also remains unverified live. Canary's score is a heuristic, not a certification or audit opinion.
 
 ## Documentation
 

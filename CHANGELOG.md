@@ -12,7 +12,7 @@ The npm package is not published. This section records repository changes; it do
 - `README.md` with local tarball installation instructions, CLI usage, generated agent configuration paths, and the verified limits currently documented for hook failure behavior.
 - `docs/SRS.md`: P0 requirements with IDs, verification methods, MVP acceptance criteria, traceability, and the roadmap requirements.
 - `docs/specs/policy.md`: hook rules B0 to B4 and W1 to W3, with the exact message text and placeholder sanitization. The implementation exists; no claim is made here that the full acceptance suite has passed.
-- `docs/specs/agent-adapters.md`: adapter contracts and actual package/generated configuration paths for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. Live-agent behavior remains unverified for all five.
+- `docs/specs/agent-adapters.md`: adapter contracts and actual package/generated configuration paths for Claude Code, Codex, Cursor, Gemini CLI, and OpenCode. The live status now records Cursor's normal deny pass separately from its unverified error fallback and preserves the other agents' runbook results.
 - `docs/THREAT-MODEL.md`: ten threats with mitigations and residual risk.
 - `docs/decisions/`: ADR-0001 to ADR-0005.
 - `docs/open-questions.md` and `docs/sources.md`.
@@ -23,7 +23,8 @@ The npm package is not published. This section records repository changes; it do
 - The executable and all command hooks now use built JavaScript by default; `canary init` writes Node-based commands with absolute build paths, and `dist/` is committed for GitHub marketplace installs.
 - `scripts/live-check-setup.mjs` and `docs/testing/live-agent-checks.md`: a disposable OS-temp sandbox with a local bare remote and harmless sentinel, plus a per-agent manual runbook for AC-4. Live results are recorded in the runbook; see the AC-4 entries below.
 - `scripts/build.mjs` now emits `dist/hook/<agent>.mjs`: one self-contained bundle per agent with the core and only that adapter, `node:` imports only, stdin/stdout, no CLI dispatch, and a build failure on relative imports. Versioned manifests and `canary init` point at these bundles; `onFailure: "block"` and `failClosed: true` are preserved. CAN-T-03 and CAN-T-04 also exercise the bundles directly. See the amendment to [ADR-0007](docs/decisions/0007-commit-built-javascript-for-marketplace-installs.md).
-- Benchmark measurements for local Windows before and after the bundle change are recorded in the SRS. The runs had different Node startup floors and are not presented as evidence of a speedup; the 100 ms target remains unmet.
+- Benchmark measurements for local Windows before and after the bundle change are recorded in the SRS. The runs had different Node startup floors and are not presented as evidence of a speedup; ADR-0009 applies CAN-N-05 to in-process `evaluate()` p50 only, with wall-clock measurements reported separately.
+- Added `npm run package-smoke` and an Ubuntu/macOS/Windows CI job that packs Canary, installs offline into an empty temporary prefix, and scans a fresh clean fixture with the installed CLI. The local Windows smoke passed; AC-6 stays open until the new remote matrix passes.
 - The opt-in MCP tool prototype now lives in `src/mcp-hook/` behind `--mcp-tool`; the default `init` path stays a command hook. [ADR-0008](docs/decisions/0008-mcp-tool-hooks.md) remains `proposed`, records the synthetic `npm run bench:mcp` result, and does not claim live-agent verification or secret-free inputs.
 
 ### Fixed
