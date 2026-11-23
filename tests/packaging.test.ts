@@ -134,7 +134,8 @@ test("Gemini CLI uses BeforeTool, run_shell_command and a millisecond timeout", 
 test("OpenCode plugin runs the self-contained bundle for shell permissions", () => {
   const source = read(".opencode/plugins/canary/index.ts");
   assert.match(source, /dist[\\/]hook[\\/]opencode\.mjs/);
-  assert.match(source, /execFileSync\(process\.execPath/);
+  assert.match(source, /execFileSync\("node"/);
+  assert.doesNotMatch(source, /process\.execPath/);
   assert.match(source, /ctx\.permission\.hook\("evaluate"/);
   assert.match(source, /ctx\.location\.directory/);
   assert.doesNotMatch(source, /src[\\/]cli[\\/]hook\.ts/);
