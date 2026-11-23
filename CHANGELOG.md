@@ -8,6 +8,8 @@ The npm package is not published. This section records repository changes; it do
 
 ### Added
 
+- `docs/assets/canary-banner.svg`: vector header for the README, drawn without raster images or font files, with reduced-motion support.
+- `README.md` redesigned with a banner header, badge row, navigation, and sections for the idea, what Canary stops, per-agent hooks, start-here steps, limits, documentation, and development.
 - `scripts/bench-hook.mjs` and `npm run bench`: zero-dependency hook startup, generated command, and in-process evaluation benchmark with synthetic allow and B3 events.
 - `README.md` with local tarball installation instructions, CLI usage, generated agent configuration paths, and the verified limits currently documented for hook failure behavior.
 - `docs/SRS.md`: P0 requirements with IDs, verification methods, MVP acceptance criteria, traceability, and the roadmap requirements.
