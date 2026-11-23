@@ -43,7 +43,7 @@ Strength values: live session / local test / source-cited / assumption.
 - `canary init` shows a diff with redaction before writing; the crash test is isolated by a path guard and substituted environment ([README](../README.md):44; [ADR-0004](decisions/0004-crash-test-isolation.md):32-39).
 - Live AC-4 passes recorded on 2026-11-22: Cursor `--yolo`, Claude Code `bypassPermissions`, OpenCode normal mode, each with B1a and B3 messages attributed to Canary ([runbook](testing/live-agent-checks.md#results):86,89,90).
 - Declared failures/limits: Codex **Unsupported** with root cause hook trust; Gemini CLI **Unverified**; AC-4 remains open ([runbook](testing/live-agent-checks.md#results):87,88,95-103; `AC-4` [SRS](SRS.md):297).
-- CI matrix green in the repo's own record: run `45076233582` ([SRS](SRS.md):276; [CHANGELOG](../CHANGELOG.md):47). The brief's `45076776836` is **not present anywhere in this checkout** and is not verified here.
+- CI matrix green in the repo's own record: run `45076233582` ([SRS](SRS.md):276; [CHANGELOG](../CHANGELOG.md):47). A later run `45076776836` on the final docs commit was also observed green via `gh run view` (six jobs, six `benchmark-numbers-*` artifacts), URL `https://github.com/eyesopen21/canary/actions/runs/45076776836`; it was not written into the repo records before this note.
 - `CAN-N-05` was split per [ADR-0009](decisions/0009-split-performance-target.md): the target applies to in-process `evaluate()` only; wall-clock latency and the Node startup floor stay published and must not be relabelled as in-process ([SRS](SRS.md):191).
 
 ## 4. What is HYPOTHESIS, unverified or rejected
